@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GH Empire Police Department | Command Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@200;300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   VARIABLES & RESET
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --gold:       #D4AF37;
+  --gold-l:     #F2D060;
+  --gold-d:     #8A6F1A;
+  --red:        #CC1A1A;
+  --red-l:      #FF2B2B;
+  --green:      #1A7A1A;
+  --green-l:    #2ECC2E;
+  --navy:       #060D16;
+  --navy2:      #0A1520;
+  --navy3:      #0F1E30;
+  --navy4:      #152840;
+  --text:       #C8D8E8;
+  --text-dim:   #4A6A8A;
+  --border:     rgba(212,175,55,.2);
+  --border2:    rgba(212,175,55,.5);
+  --glow:       0 0 20px rgba(212,175,55,.3);
+  --glow2:      0 0 40px rgba(212,175,55,.5);
+  --scan:       rgba(212,175,55,.04);
+  --r: 6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Exo 2',sans-serif;
+  background:var(--navy);
+  color:var(--text);
+  overflow-x:hidden;
+  cursor:crosshair;
+}
+a{text-decoration:none;color:inherit}
+img{max-width:100%}
+button{cursor:crosshair;font-family:inherit}
+input,textarea,select{font-family:inherit}
+.hidden{display:none!important}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:2px}
+
+/* Scanline overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+  animation:scanShift 8s linear infinite;
+}
+@keyframes scanShift{from{background-position:0 0}to{background-position:0 100px}}
+
+/* Moving scanline */
+body::before{
+  content:'';position:fixed;left:0;right:0;height:2px;z-index:9997;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,.15),transparent);
+  animation:scanLine 6s linear infinite;
+  top:0;
+}
+@keyframes scanLine{from{top:0}to{top:100vh}}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+.container{max-width:1340px;margin:0 auto;padding:0 24px}
+.section{padding:80px 0}
+
+/* HUD corner bracket mixin */
+.hud-box{
+  position:relative;
+  background:rgba(9,18,30,.85);
+  border:1px solid var(--border);
+}
+.hud-box::before,.hud-box::after,
+.hud-box .hud-br,.hud-box .hud-bl{
+  content:'';position:absolute;width:16px;height:16px;
+  border-color:var(--gold);border-style:solid;
+}
+.hud-box::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.hud-box::after{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.hud-box .hud-br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.hud-box .hud-bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+
+.sec-label{
+  font-family:'Share Tech Mono',monospace;
+  font-size:.7rem;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--gold);
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.sec-label::before{content:'//';color:var(--red-l);margin-right:4px}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+.sec-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(1.4rem,3vw,2rem);
+  font-weight:700;color:#fff;
+  letter-spacing:.05em;margin-bottom:4px;
+  text-shadow:0 0 20px rgba(212,175,55,.4);
+}
+.sec-title span{color:var(--gold)}
+.divider{
+  width:50px;height:2px;
+  background:linear-gradient(90deg,var(--red-l),var(--gold));
+  margin:12px 0 36px;box-shadow:0 0 8px rgba(212,175,55,.5);
+}
+.tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:2px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:600;
+}
+.tag-gold{background:rgba(212,175,55,.1);color:var(--gold);border:1px solid rgba(212,175,55,.3)}
+.tag-red{background:rgba(204,26,26,.15);color:var(--red-l);border:1px solid rgba(204,26,26,.3)}
+.tag-green{background:rgba(26,122,26,.15);color:var(--green-l);border:1px solid rgba(26,122,26,.3)}
+.tag-blue{background:rgba(30,80,160,.2);color:#7abaff;border:1px solid rgba(30,80,160,.4)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 24px;
+  border:1px solid var(--gold);border-radius:2px;
+  font-family:'Orbitron',monospace;font-size:.7rem;
+  font-weight:600;letter-spacing:.15em;text-transform:uppercase;
+  transition:all .25s;background:transparent;color:var(--gold);
+  position:relative;overflow:hidden;
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(212,175,55,.15),transparent);
+  opacity:0;transition:opacity .25s;
+}
+.btn:hover{background:rgba(212,175,55,.12);box-shadow:var(--glow);color:var(--gold-l)}
+.btn:hover::before{opacity:1}
+.btn-primary{background:rgba(212,175,55,.15);box-shadow:var(--glow)}
+.btn-primary:hover{background:rgba(212,175,55,.25);box-shadow:var(--glow2)}
+.btn-danger{border-color:var(--red-l);color:var(--red-l)}
+.btn-danger:hover{background:rgba(204,26,26,.2);box-shadow:0 0 20px rgba(204,26,26,.3)}
+.btn-sm{padding:7px 16px;font-size:.62rem}
+.btn-xs{padding:4px 10px;font-size:.58rem}
+
+.form-group{margin-bottom:18px}
+.form-label{
+  display:block;
+  font-family:'Share Tech Mono',monospace;
+  font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:6px;
+}
+.form-control{
+  width:100%;padding:10px 13px;
+  background:rgba(6,13,22,.9);
+  border:1px solid var(--border);border-radius:2px;
+  color:var(--text);font-size:.9rem;
+  transition:all .25s;
+  font-family:'Exo 2',sans-serif;
+}
+.form-control:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.1),var(--glow)}
+.form-control::placeholder{color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.75rem}
+textarea.form-control{resize:vertical;min-height:90px}
+.alert{padding:10px 14px;border-radius:2px;font-size:.85rem;margin-bottom:14px}
+.alert-success{background:rgba(26,122,26,.15);border:1px solid rgba(46,204,46,.3);color:var(--green-l)}
+.alert-error{background:rgba(204,26,26,.15);border:1px solid rgba(255,43,43,.3);color:var(--red-l)}
+.alert-info{background:rgba(212,175,55,.08);border:1px solid var(--border);color:var(--gold)}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;display:inline-block;
+}
+.s-active{background:var(--green-l);box-shadow:0 0 8px var(--green-l);animation:blink 2s ease-in-out infinite}
+.s-offduty{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.s-inactive{background:var(--text-dim)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ═══════════════════════════════════════════════════════════
+   TOPBAR
+   ═══════════════════════════════════════════════════════════ */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:32px;
+  background:rgba(6,13,22,.98);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+}
+.topbar-inner{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;
+}
+.tb-left,.tb-right{display:flex;align-items:center;gap:20px}
+.tb-item{
+  font-family:'Share Tech Mono',monospace;font-size:.68rem;
+  letter-spacing:.12em;color:var(--text-dim);
+  display:flex;align-items:center;gap:6px;
+}
+.tb-item .dot{
+  width:5px;height:5px;border-radius:50%;background:var(--green-l);
+  box-shadow:0 0 6px var(--green-l);animation:blink 2s ease-in-out infinite;
+}
+.tb-item .dot-gold{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+#adminTopBtn{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.15em;text-transform:uppercase;
+  background:none;border:1px solid var(--border);
+  color:var(--gold);padding:3px 12px;border-radius:2px;
+  cursor:crosshair;transition:all .25s;
+}
+#adminTopBtn:hover{background:rgba(212,175,55,.1);box-shadow:var(--glow);border-color:var(--border2)}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════════ */
+#navbar{
+  position:fixed;top:32px;left:0;right:0;z-index:998;
+  height:64px;
+  background:rgba(6,13,22,.97);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);
+  transition:all .3s;
+}
+#navbar.scrolled{top:0;border-bottom-color:var(--border2);box-shadow:0 4px 40px rgba(0,0,0,.8)}
+.nav-inner{display:flex;justify-content:space-between;align-items:center;height:100%}
+.nav-brand{display:flex;align-items:center;gap:14px;cursor:crosshair}
+.nav-brand-icon{
+  position:relative;width:44px;height:44px;
+}
+.nav-brand-icon img,.nav-brand-icon .brand-emoji{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 0 6px rgba(212,175,55,.5));
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+}
+.nav-brand-ring{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:1px solid rgba(212,175,55,.3);
+  animation:rotateSlow 10s linear infinite;
+}
+.nav-brand-ring::after{
+  content:'';position:absolute;top:50%;left:-3px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 8px var(--gold);
+  transform:translateY(-50%);
+}
+@keyframes rotateSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.nav-brand-text{}
+.nav-brand-main{
+  font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;
+  color:var(--gold);letter-spacing:.08em;
+  text-shadow:0 0 12px rgba(212,175,55,.4);
+}
+.nav-brand-sub{
+  font-family:'Share Tech Mono',monospace;font-size:.6rem;
+  letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;
+}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+.nav-links li a,.nav-links li button{
+  display:block;padding:8px 12px;
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.15em;text-transform:uppercase;
+  color:var(--text-dim);border-radius:2px;
+  transition:all .25s;background:none;border:none;cursor:crosshair;
+  white-space:nowrap;
+}
+.nav-links li a:hover,.nav-links li a.active,
+.nav-links li button:hover{color:var(--gold);background:rgba(212,175,55,.06);text-shadow:0 0 8px rgba(212,175,55,.4)}
+.nav-join{
+  background:rgba(212,175,55,.1)!important;color:var(--gold)!important;
+  border:1px solid rgba(212,175,55,.3)!important;
+  font-family:'Orbitron',monospace!important;
+  box-shadow:var(--glow)!important;
+}
+.nav-join:hover{background:rgba(212,175,55,.2)!important;box-shadow:var(--glow2)!important}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:22px;height:1px;background:var(--gold);transition:all .25s}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGES
+   ═══════════════════════════════════════════════════════════ */
+.page{display:none}
+.page.active{display:block}
+#pageContent{padding-top:96px}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO — TACTICAL COMMAND CENTER
+   ═══════════════════════════════════════════════════════════ */
+#hero{
+  min-height:100vh;display:flex;align-items:center;
+  position:relative;overflow:hidden;padding:100px 0 60px;
+  background:var(--navy);
+}
+#heroCanvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;
+}
+.hero-inner{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center;
+}
+/* Left column: text */
+.hero-text{}
+.hero-system-id{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;
+  letter-spacing:.3em;color:var(--text-dim);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-system-id::before{
+  content:'SYS::ONLINE';color:var(--green-l);
+  animation:textFlicker 4s ease-in-out infinite;
+}
+@keyframes textFlicker{0%,95%,100%{opacity:1}96%,99%{opacity:.3}}
+.hero-title{
+  font-family:'Orbitron',monospace;font-size:clamp(1.8rem,4vw,3.2rem);
+  font-weight:900;line-height:1.05;margin-bottom:12px;color:#fff;
+  text-shadow:0 0 30px rgba(212,175,55,.2);
+  letter-spacing:.04em;
+}
+.hero-title .ht-gh{color:var(--gold);text-shadow:0 0 20px rgba(212,175,55,.6)}
+.hero-title .ht-empire{color:#fff}
+.hero-title .ht-pd{color:var(--red-l);text-shadow:0 0 16px rgba(255,43,43,.4)}
+.hero-subtitle{
+  font-family:'Share Tech Mono',monospace;font-size:.85rem;
+  letter-spacing:.2em;color:var(--text-dim);margin-bottom:24px;
+}
+.hero-desc{
+  font-size:1rem;line-height:1.75;color:var(--text-dim);max-width:480px;margin-bottom:36px;
+}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.hero-readout{
+  margin-top:44px;display:flex;flex-direction:column;gap:10px;
+}
+.readout-line{
+  display:flex;align-items:center;gap:12px;
+  font-family:'Share Tech Mono',monospace;font-size:.72rem;
+  letter-spacing:.1em;color:var(--text-dim);
+}
+.readout-key{color:var(--gold);min-width:130px}
+.readout-bar{
+  height:3px;border-radius:1px;
+  background:rgba(212,175,55,.1);flex:1;max-width:120px;
+  position:relative;overflow:hidden;
+}
+.readout-bar-fill{
+  position:absolute;top:0;left:0;height:100%;border-radius:1px;
+  background:linear-gradient(90deg,var(--gold-d),var(--gold));
+  box-shadow:0 0 6px var(--gold);
+  animation:fillBar 2s ease forwards;
+}
+@keyframes fillBar{from{width:0}to{width:var(--fill)}}
+.readout-val{color:var(--gold-l);min-width:40px}
+
+/* RIGHT: Orbital Logo Display */
+.hero-orbital{
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.orbital-container{
+  position:relative;width:420px;height:420px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* Outer ring */
+.orbit-ring{
+  position:absolute;border-radius:50%;border:1px solid rgba(212,175,55,.15);
+}
+.ring-1{width:100%;height:100%;border-color:rgba(212,175,55,.12)}
+.ring-2{width:78%;height:78%;border-color:rgba(212,175,55,.2)}
+.ring-3{width:56%;height:56%;border-color:rgba(212,175,55,.15);border-style:dashed}
+.ring-4{width:35%;height:35%;border-color:rgba(212,175,55,.25)}
+
+/* Radar sweep */
+.radar-sweep{
+  position:absolute;width:100%;height:100%;border-radius:50%;
+  animation:sweepRotate 4s linear infinite;
+}
+.radar-sweep::after{
+  content:'';position:absolute;inset:0;
+  background:conic-gradient(from 0deg,rgba(212,175,55,.18) 0deg, rgba(212,175,55,.04) 60deg, transparent 60deg);
+  border-radius:50%;
+}
+@keyframes sweepRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* Tick marks on outer ring */
+.ring-ticks{
+  position:absolute;width:100%;height:100%;border-radius:50%;
+  animation:rotateSlow 40s linear infinite reverse;
+}
+.tick{
+  position:absolute;width:2px;background:rgba(212,175,55,.4);
+  top:0;left:50%;transform-origin:bottom center;
+}
+
+/* Orbiting dot 1 — main */
+.orbit-dot-1{
+  position:absolute;width:100%;height:100%;
+  animation:orbitFast 5s linear infinite;
+}
+.orbit-dot-1::after{
+  content:'';position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+  width:12px;height:12px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 16px var(--gold),0 0 30px rgba(212,175,55,.5);
+}
+@keyframes orbitFast{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* Orbiting dot 2 — slower, opposite */
+.orbit-dot-2{
+  position:absolute;width:78%;height:78%;
+  animation:orbitMed 8s linear infinite reverse;
+}
+.orbit-dot-2::after{
+  content:'';position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red-l);box-shadow:0 0 10px var(--red-l),0 0 20px rgba(255,43,43,.4);
+}
+@keyframes orbitMed{from{transform:rotate(45deg)}to{transform:rotate(405deg)}}
+
+/* Orbiting dot 3 — inner green */
+.orbit-dot-3{
+  position:absolute;width:56%;height:56%;
+  animation:orbitSlow 12s linear infinite;
+}
+.orbit-dot-3::after{
+  content:'';position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+  width:5px;height:5px;border-radius:50%;
+  background:var(--green-l);box-shadow:0 0 8px var(--green-l);
+}
+@keyframes orbitSlow{from{transform:rotate(180deg)}to{transform:rotate(540deg)}}
+
+/* Center logo circle */
+.center-circle{
+  position:relative;z-index:10;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(20,40,60,.9),rgba(6,13,22,.98));
+  border:2px solid rgba(212,175,55,.5);
+  box-shadow:0 0 30px rgba(212,175,55,.2),inset 0 0 30px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+.center-circle::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:1px solid rgba(212,175,55,.15);
+  animation:pulseRing 3s ease-in-out infinite;
+}
+.center-circle::after{
+  content:'';position:absolute;inset:-16px;border-radius:50%;
+  border:1px solid rgba(212,175,55,.07);
+  animation:pulseRing 3s ease-in-out infinite .7s;
+}
+@keyframes pulseRing{
+  0%,100%{transform:scale(1);opacity:.5}
+  50%{transform:scale(1.05);opacity:1}
+}
+.center-logo{
+  width:90px;height:90px;object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(212,175,55,.6));
+  animation:logoPulse 4s ease-in-out infinite;
+}
+.center-logo-emoji{font-size:3.5rem;animation:logoPulse 4s ease-in-out infinite;line-height:1}
+@keyframes logoPulse{
+  0%,100%{filter:drop-shadow(0 0 12px rgba(212,175,55,.6))}
+  50%{filter:drop-shadow(0 0 24px rgba(212,175,55,.9))}
+}
+.center-badge-text{
+  font-family:'Share Tech Mono',monospace;font-size:.5rem;
+  letter-spacing:.2em;color:var(--gold);margin-top:4px;text-align:center;
+}
+
+/* HUD data points around the orbital */
+.hud-data{
+  position:absolute;
+  font-family:'Share Tech Mono',monospace;font-size:.6rem;
+  letter-spacing:.1em;color:var(--gold);
+  display:flex;flex-direction:column;gap:3px;
+}
+.hud-data-line{color:var(--text-dim)}
+.hud-d1{top:10%;left:0;text-align:left}
+.hud-d2{top:10%;right:0;text-align:right}
+.hud-d3{bottom:10%;left:0;text-align:left}
+.hud-d4{bottom:10%;right:0;text-align:right}
+.hud-cross{
+  position:absolute;opacity:.2;
+}
+.hud-cross.h{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);top:50%}
+.hud-cross.v{width:1px;height:100%;background:linear-gradient(180deg,transparent,var(--gold),transparent);left:50%}
+
+/* Ghana flag accent on orbital */
+.flag-arc{
+  position:absolute;top:0;left:0;right:0;
+  height:8px;border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  overflow:hidden;
+}
+.flag-arc-inner{
+  height:100%;
+  background:linear-gradient(90deg,var(--red) 33%,var(--gold) 33% 67%,var(--green) 67%);
+  opacity:.6;
+}
+
+/* Ticker below hero */
+.ticker-wrap{
+  background:rgba(6,13,22,.97);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:8px 0;overflow:hidden;position:relative;
+}
+.ticker-label{
+  position:absolute;left:0;top:0;bottom:0;
+  display:flex;align-items:center;padding:0 14px;
+  background:var(--gold);color:var(--navy);
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.2em;text-transform:uppercase;font-weight:700;z-index:2;
+  white-space:nowrap;
+}
+.ticker-track{
+  display:flex;gap:60px;
+  animation:tickerMove 30s linear infinite;
+  padding-left:140px;width:max-content;
+}
+.ticker-item{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;
+  color:var(--text-dim);letter-spacing:.08em;white-space:nowrap;
+}
+.ticker-item::before{content:'◆';color:var(--gold);margin-right:10px;font-size:.6rem}
+@keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS BAND
+   ═══════════════════════════════════════════════════════════ */
+.stats-band{
+  background:var(--navy2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:36px 0;
+}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+}
+.stat-cell{
+  background:var(--navy2);padding:24px 28px;
+  position:relative;overflow:hidden;
+}
+.stat-cell::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--red),var(--gold));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .5s;
+}
+.stat-cell:hover::before{transform:scaleX(1)}
+.stat-num{
+  font-family:'Orbitron',monospace;font-size:2rem;
+  font-weight:800;color:var(--gold);
+  text-shadow:0 0 15px rgba(212,175,55,.5);
+  margin-bottom:4px;
+}
+.stat-lbl{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;
+}
+.stat-gfx{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:2rem;opacity:.06;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NEWS CARDS
+   ═══════════════════════════════════════════════════════════ */
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.news-card{
+  background:rgba(9,18,30,.9);
+  border:1px solid var(--border);border-radius:0;
+  overflow:hidden;transition:all .3s;position:relative;
+}
+.news-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--green));
+  transform:scaleX(0);transform-origin:left;transition:transform .4s;
+}
+.news-card:hover::before{transform:scaleX(1)}
+.news-card:hover{border-color:var(--border2);box-shadow:var(--glow),0 8px 40px rgba(0,0,0,.6);transform:translateY(-3px)}
+.nc-img{
+  height:170px;background:var(--navy3);
+  display:flex;align-items:center;justify-content:center;font-size:3rem;
+  position:relative;overflow:hidden;
+}
+.nc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nc-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,13,22,.8),transparent);
+}
+.nc-scan{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,.6),transparent);
+  animation:ncScan 3s ease-in-out infinite;
+}
+@keyframes ncScan{0%,100%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}to{top:100%}}
+.nc-body{padding:18px}
+.nc-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.nc-date{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.08em}
+.nc-title{
+  font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;
+  color:#fff;margin-bottom:8px;line-height:1.35;
+  text-shadow:0 0 10px rgba(255,255,255,.1);
+}
+.nc-excerpt{font-size:.85rem;color:var(--text-dim);line-height:1.6;margin-bottom:14px}
+.nc-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:12px;border-top:1px solid var(--border);
+}
+.nc-author{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--text-dim)}
+.nc-read{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--gold);
+  background:none;border:none;cursor:crosshair;
+  display:flex;align-items:center;gap:4px;transition:all .2s;
+}
+.nc-read:hover{color:var(--gold-l);text-shadow:0 0 8px rgba(212,175,55,.5)}
+
+/* ═══════════════════════════════════════════════════════════
+   ABOUT SECTION
+   ═══════════════════════════════════════════════════════════ */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.about-vis{
+  position:relative;
+  aspect-ratio:1;max-width:380px;
+}
+.about-vis-bg{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,rgba(20,40,60,.4),transparent 70%);
+}
+.about-orbital-mini{
+  width:100%;height:100%;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.about-center{
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(9,18,30,.95);
+  border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.5rem;
+  box-shadow:var(--glow),inset 0 0 20px rgba(0,0,0,.5);
+  position:relative;z-index:5;
+  animation:logoPulse 4s ease-in-out infinite;
+}
+.about-ring-outer{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(212,175,55,.15);
+  animation:rotateSlow 15s linear infinite;
+}
+.about-ring-outer::after{
+  content:'◆';position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  color:var(--gold);font-size:.5rem;
+  text-shadow:0 0 10px var(--gold);
+}
+.about-ring-mid{
+  position:absolute;inset:30px;border-radius:50%;
+  border:1px dashed rgba(212,175,55,.12);
+  animation:rotateSlow 10s linear infinite reverse;
+}
+.about-stats-float{
+  position:absolute;display:flex;flex-direction:column;align-items:center;
+}
+.about-stats-float.asf1{top:5%;left:5%}
+.about-stats-float.asf2{top:5%;right:5%}
+.about-stats-float.asf3{bottom:5%;left:5%}
+.about-stats-float.asf4{bottom:5%;right:5%}
+.asf-num{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;color:var(--gold);text-shadow:0 0 12px rgba(212,175,55,.5)}
+.asf-label{font-family:'Share Tech Mono',monospace;font-size:.55rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;text-align:center}
+.about-text p{color:var(--text-dim);margin-bottom:14px;line-height:1.8;font-size:.95rem}
+.pillars{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.pillar{
+  background:rgba(9,18,30,.9);border:1px solid var(--border);
+  padding:16px;position:relative;
+}
+.pillar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--gold),transparent);
+}
+.pillar-icon{font-size:1.4rem;margin-bottom:6px}
+.pillar-title{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--gold);margin-bottom:4px;letter-spacing:.05em}
+.pillar-desc{font-size:.78rem;color:var(--text-dim);line-height:1.5}
+
+/* ═══════════════════════════════════════════════════════════
+   ROSTER
+   ═══════════════════════════════════════════════════════════ */
+.roster-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.f-btn{
+  padding:6px 16px;background:transparent;
+  border:1px solid var(--border);border-radius:2px;
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);
+  cursor:crosshair;transition:all .25s;
+}
+.f-btn:hover,.f-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.06);box-shadow:var(--glow)}
+.roster-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.officer-card{
+  background:rgba(9,18,30,.9);border:1px solid var(--border);
+  padding:20px 16px;text-align:center;transition:all .3s;
+  position:relative;overflow:hidden;
+}
+.officer-card::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(212,175,55,.03),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.officer-card:hover{border-color:var(--border2);box-shadow:var(--glow),0 8px 30px rgba(0,0,0,.5);transform:translateY(-2px)}
+.officer-card:hover::after{opacity:1}
+.oc-avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--navy3);border:2px solid rgba(212,175,55,.3);
+  margin:0 auto 12px;
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  overflow:hidden;position:relative;
+  box-shadow:0 0 15px rgba(212,175,55,.1);
+}
+.oc-avatar img{width:100%;height:100%;object-fit:cover}
+.oc-avatar::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:rgba(212,175,55,.5);
+}
+.oc-badge{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--gold);letter-spacing:.15em;margin-bottom:3px}
+.oc-name{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:#fff;margin-bottom:5px}
+.oc-rank{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}
+.oc-status{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--text-dim)}
+.oc-div{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--text-dim);opacity:.7}
+.rank-pip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:1px;
+  font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+}
+.rp-commissioner{background:rgba(212,175,55,.15);color:var(--gold-l);border:1px solid rgba(212,175,55,.3)}
+.rp-deputy{background:rgba(212,175,55,.08);color:#c8a84b;border:1px solid rgba(212,175,55,.2)}
+.rp-captain{background:rgba(204,26,26,.15);color:var(--red-l);border:1px solid rgba(204,26,26,.3)}
+.rp-lieutenant{background:rgba(30,80,160,.2);color:#7abaff;border:1px solid rgba(30,80,160,.3)}
+.rp-sergeant{background:rgba(26,122,26,.15);color:var(--green-l);border:1px solid rgba(26,122,26,.3)}
+.rp-officer{background:rgba(74,106,138,.15);color:#6a8aaa;border:1px solid rgba(74,106,138,.3)}
+.rp-cadet{background:rgba(40,50,70,.3);color:#5a7a9a;border:1px solid rgba(40,50,70,.5)}
+
+/* ═══════════════════════════════════════════════════════════
+   GALLERY
+   ═══════════════════════════════════════════════════════════ */
+.gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gal-item{
+  position:relative;aspect-ratio:1;border:1px solid var(--border);
+  background:var(--navy3);display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;overflow:hidden;cursor:crosshair;transition:all .3s;
+}
+.gal-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gal-item:hover{border-color:var(--border2);box-shadow:var(--glow);transform:scale(1.02)}
+.gal-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,13,22,.9) 0%,transparent 60%);
+  opacity:0;transition:opacity .3s;
+  display:flex;align-items:flex-end;padding:10px;
+}
+.gal-item:hover .gal-overlay{opacity:1}
+.gal-cap{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.08em;color:#fff}
+/* Corner brackets on gallery items */
+.gal-item::before,.gal-item::after{
+  content:'';position:absolute;width:12px;height:12px;
+  border-color:rgba(212,175,55,.3);border-style:solid;z-index:2;
+  opacity:0;transition:opacity .3s;
+}
+.gal-item::before{top:4px;left:4px;border-width:1px 0 0 1px}
+.gal-item::after{top:4px;right:4px;border-width:1px 1px 0 0}
+.gal-item:hover::before,.gal-item:hover::after{opacity:1}
+
+/* ═══════════════════════════════════════════════════════════
+   DOCUMENTS
+   ═══════════════════════════════════════════════════════════ */
+.docs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.doc-card{
+  background:rgba(9,18,30,.9);border:1px solid var(--border);
+  padding:18px;display:flex;gap:14px;align-items:flex-start;
+  transition:all .3s;cursor:crosshair;
+}
+.doc-card:hover{border-color:var(--border2);box-shadow:var(--glow);transform:translateX(3px)}
+.doc-icon{
+  width:40px;height:40px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  background:rgba(212,175,55,.05);flex-shrink:0;
+}
+.doc-title{font-family:'Orbitron',monospace;font-size:.75rem;color:#fff;margin-bottom:4px;letter-spacing:.03em}
+.doc-meta{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.08em}
+.doc-dl{margin-left:auto;flex-shrink:0;background:none;border:none;color:var(--gold);font-size:1rem;cursor:crosshair;transition:all .2s;padding:4px}
+.doc-dl:hover{color:var(--gold-l);text-shadow:0 0 8px var(--gold);transform:scale(1.15)}
+
+/* ═══════════════════════════════════════════════════════════
+   VIDEOS
+   ═══════════════════════════════════════════════════════════ */
+.videos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.video-card{background:rgba(9,18,30,.9);border:1px solid var(--border);overflow:hidden;transition:all .3s}
+.video-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--glow)}
+.video-thumb{position:relative;aspect-ratio:16/9;background:var(--navy3);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-dim);overflow:hidden;cursor:crosshair}
+.video-thumb iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.video-play-layer{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(6,13,22,.5);transition:all .3s;
+}
+.video-play-btn{
+  width:54px;height:54px;border-radius:50%;
+  background:rgba(212,175,55,.15);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;color:var(--gold);transition:all .3s;
+  box-shadow:var(--glow);cursor:crosshair;
+}
+.video-play-btn:hover{background:rgba(212,175,55,.3);box-shadow:var(--glow2);transform:scale(1.1)}
+.vc-body{padding:14px}
+.vc-title{font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;color:#fff;margin-bottom:6px}
+.vc-meta{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--text-dim)}
+
+/* ═══════════════════════════════════════════════════════════
+   JOIN CTA
+   ═══════════════════════════════════════════════════════════ */
+.join-section{
+  padding:80px 0;text-align:center;position:relative;overflow:hidden;
+  background:var(--navy2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.join-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(212,175,55,.04),transparent);
+}
+.join-section canvas{position:absolute;inset:0;opacity:.4}
+.join-title{
+  font-family:'Orbitron',monospace;font-size:clamp(1.4rem,3vw,2.2rem);
+  font-weight:800;color:var(--gold);margin-bottom:12px;
+  text-shadow:0 0 20px rgba(212,175,55,.4);letter-spacing:.08em;
+}
+.join-desc{color:var(--text-dim);max-width:520px;margin:0 auto 32px;line-height:1.8}
+.join-steps{display:flex;justify-content:center;gap:0;flex-wrap:wrap;margin-bottom:36px}
+.join-step{
+  display:flex;flex-direction:column;align-items:center;padding:16px 36px;position:relative;
+}
+.join-step::after{
+  content:'→';position:absolute;right:-8px;top:22px;
+  color:rgba(212,175,55,.3);font-size:1rem;
+}
+.join-step:last-child::after{display:none}
+.js-num{
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:.9rem;color:var(--gold);
+  margin-bottom:8px;
+  box-shadow:var(--glow);
+  animation:pulseRing 3s ease-in-out infinite;
+}
+.js-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim)}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTACT
+   ═══════════════════════════════════════════════════════════ */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px}
+.contact-links{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.contact-link{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(9,18,30,.9);border:1px solid var(--border);padding:14px 18px;
+  transition:all .3s;
+}
+.contact-link:hover{border-color:var(--border2);box-shadow:var(--glow)}
+.cl-icon{
+  width:38px;height:38px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  background:rgba(212,175,55,.05);flex-shrink:0;
+}
+.cl-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim)}
+.cl-value{font-size:.9rem;color:#fff;margin-top:2px}
+.contact-form-box{
+  background:rgba(9,18,30,.9);border:1px solid var(--border);padding:32px;
+  position:relative;
+}
+.contact-form-box::before,.contact-form-box::after{
+  content:'';position:absolute;width:14px;height:14px;border-color:var(--gold);border-style:solid;
+}
+.contact-form-box::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.contact-form-box::after{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.contact-form-title{font-family:'Orbitron',monospace;font-size:.9rem;color:var(--gold);margin-bottom:24px;letter-spacing:.05em}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════ */
+footer{background:var(--navy2);border-top:1px solid var(--border);padding-top:50px}
+.ghana-bar{height:3px;background:linear-gradient(90deg,var(--red) 33%,var(--gold) 33% 67%,var(--green) 67%);margin-bottom:50px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;padding-bottom:36px;border-bottom:1px solid var(--border);margin-bottom:28px}
+.footer-brand p{font-size:.85rem;color:var(--text-dim);line-height:1.7;margin-top:12px}
+.footer-col h4{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--gold);letter-spacing:.1em;margin-bottom:14px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-col ul li a{font-size:.82rem;color:var(--text-dim);transition:all .2s;cursor:crosshair;font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.05em}
+.footer-col ul li a:hover{color:var(--gold)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-bottom:28px}
+.footer-copy{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.1em;color:var(--text-dim)}
+.footer-sys{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--text-dim);display:flex;align-items:center;gap:8px}
+.sys-dot{width:5px;height:5px;border-radius:50%;background:var(--green-l);box-shadow:0 0 6px var(--green-l);animation:blink 2s ease-in-out infinite}
+
+/* ═══════════════════════════════════════════════════════════
+   ANNOUNCEMENT BANNER
+   ═══════════════════════════════════════════════════════════ */
+.announcement-banner{
+  background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);
+  border-left:3px solid var(--gold);
+  padding:12px 18px;display:flex;align-items:center;gap:12px;margin-bottom:24px;
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.08em;
+}
+.ann-pulse{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:blink 2s ease-in-out infinite;flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.88);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  backdrop-filter:blur(6px);
+}
+.modal-box{
+  background:var(--navy2);border:1px solid var(--border2);
+  width:100%;max-width:640px;max-height:90vh;overflow-y:auto;
+  position:relative;
+}
+.modal-box::before,.modal-box::after{
+  content:'';position:absolute;width:16px;height:16px;border-color:var(--gold);border-style:solid;z-index:2;
+}
+.modal-box::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.modal-box::after{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.modal-box-lg{max-width:880px}
+.modal-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+}
+.modal-ttl{font-family:'Orbitron',monospace;font-size:.95rem;color:var(--gold);letter-spacing:.05em}
+.modal-x{
+  background:none;border:none;color:var(--text-dim);font-size:1.1rem;
+  cursor:crosshair;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.modal-x:hover{color:#fff;background:rgba(255,255,255,.1)}
+.modal-bdy{padding:22px}
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* News read modal */
+.nm-img{width:100%;height:240px;object-fit:cover;background:var(--navy3);display:flex;align-items:center;justify-content:center;font-size:4rem;margin-bottom:18px;overflow:hidden;position:relative}
+.nm-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nm-title{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.3;text-shadow:0 0 10px rgba(255,255,255,.1)}
+.nm-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.nm-body{color:var(--text-dim);line-height:1.8;white-space:pre-wrap;font-size:.9rem}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN LOGIN
+   ═══════════════════════════════════════════════════════════ */
+#adminLoginOverlay{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,.95);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(10px);
+}
+.login-card{
+  background:var(--navy2);border:1px solid var(--border2);
+  padding:44px;width:360px;text-align:center;
+  position:relative;
+  box-shadow:var(--glow2);
+}
+.login-card::before,.login-card::after{
+  content:'';position:absolute;width:18px;height:18px;border-color:var(--gold);border-style:solid;
+}
+.login-card::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.login-card::after{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.login-orbital{
+  width:90px;height:90px;margin:0 auto 20px;position:relative;
+}
+.login-center{
+  width:70px;height:70px;border-radius:50%;
+  background:var(--navy);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  position:absolute;inset:10px;box-shadow:var(--glow);
+}
+.login-center img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 8px rgba(212,175,55,.6))}
+.login-ring{
+  position:absolute;inset:0;border-radius:50%;border:1px solid rgba(212,175,55,.25);
+  animation:rotateSlow 4s linear infinite;
+}
+.login-ring::after{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:8px;height:8px;border-radius:50%;margin-top:-4px;
+  background:var(--gold);box-shadow:0 0 12px var(--gold);
+}
+.login-title{font-family:'Orbitron',monospace;font-size:1rem;color:var(--gold);margin-bottom:4px;letter-spacing:.08em}
+.login-sub{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:28px}
+.login-cursor{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  color:var(--text-dim);letter-spacing:.12em;margin-bottom:16px;
+  animation:textFlicker 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN PANEL
+   ═══════════════════════════════════════════════════════════ */
+#adminPanel{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--navy);display:flex;flex-direction:column;overflow:hidden;
+}
+.admin-topbar{
+  height:54px;background:var(--navy2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;
+}
+.atb-brand{display:flex;align-items:center;gap:12px}
+.atb-orbital{width:34px;height:34px;position:relative;flex-shrink:0}
+.atb-center{
+  position:absolute;inset:4px;border-radius:50%;background:var(--navy);
+  border:1px solid rgba(212,175,55,.3);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+}
+.atb-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(212,175,55,.2);animation:rotateSlow 5s linear infinite}
+.atb-ring::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold);margin-top:-2px}
+.atb-text-main{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--gold);font-weight:700;letter-spacing:.08em}
+.atb-text-sub{font-family:'Share Tech Mono',monospace;font-size:.55rem;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase}
+.atb-right{display:flex;align-items:center;gap:10px}
+.atb-user{display:flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text-dim)}
+.atb-avatar{width:28px;height:28px;border-radius:50%;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--gold)}
+.admin-body{display:flex;flex:1;overflow:hidden}
+.admin-sidebar{
+  width:220px;flex-shrink:0;background:var(--navy2);border-right:1px solid var(--border);overflow-y:auto;padding:12px 0;
+}
+.sb-section{padding:8px 14px 4px;font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim);margin-top:8px}
+.sb-btn{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;
+  background:none;border:none;font-family:'Share Tech Mono',monospace;
+  font-size:.72rem;letter-spacing:.08em;color:var(--text-dim);
+  cursor:crosshair;transition:all .2s;text-align:left;
+  border-left:2px solid transparent;
+}
+.sb-btn:hover{background:rgba(212,175,55,.05);color:var(--text)}
+.sb-btn.active{background:rgba(212,175,55,.08);color:var(--gold);border-left-color:var(--gold)}
+.sb-btn .sbi{font-size:.95rem;width:18px;text-align:center}
+.admin-content{flex:1;overflow-y:auto;background:var(--navy);padding:0}
+.admin-pane{display:none;padding:28px}
+.admin-pane.active{display:block}
+.admin-pane-hdr{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);
+}
+.apane-title{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--gold);margin-bottom:4px;letter-spacing:.05em}
+.apane-sub{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.1em;color:var(--text-dim)}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.astat{
+  background:rgba(9,18,30,.9);border:1px solid var(--border);padding:18px;
+  position:relative;overflow:hidden;
+}
+.astat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+.astat-icon{font-size:1.3rem;margin-bottom:6px}
+.astat-num{font-family:'Orbitron',monospace;font-size:1.6rem;color:var(--gold);font-weight:700}
+.astat-lbl{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-top:2px}
+.table-wrap{background:rgba(9,18,30,.9);border:1px solid var(--border);overflow:hidden}
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.data-table th{
+  background:rgba(6,13,22,.8);padding:11px 14px;text-align:left;
+  font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.data-table td{padding:12px 14px;border-bottom:1px solid rgba(212,175,55,.05);color:var(--text-dim);vertical-align:middle}
+.data-table tr:hover td{background:rgba(212,175,55,.02)}
+.actions{display:flex;gap:6px}
+.admin-qactions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.activity-list{display:flex;flex-direction:column;gap:1px}
+.act-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(9,18,30,.9);border-bottom:1px solid rgba(212,175,55,.05);font-size:.82rem}
+.act-icon{width:30px;height:30px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.9rem;background:rgba(212,175,55,.04);flex-shrink:0}
+.act-text{flex:1;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.04em}
+.act-time{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--text-dim);opacity:.6}
+.settings-card{background:rgba(9,18,30,.9);border:1px solid var(--border);padding:22px;margin-bottom:18px}
+.settings-card h4{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--gold);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);letter-spacing:.05em}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.upload-zone{
+  border:1px dashed rgba(212,175,55,.25);padding:28px;text-align:center;
+  cursor:crosshair;transition:all .25s;background:rgba(212,175,55,.02);
+}
+.upload-zone:hover{border-color:rgba(212,175,55,.5);background:rgba(212,175,55,.04);box-shadow:var(--glow)}
+.uz-icon{font-size:2.2rem;margin-bottom:10px}
+.uz-text{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.12em;color:var(--text-dim)}
+.uz-sub{font-size:.65rem;color:var(--text-dim);opacity:.6;margin-top:4px;font-family:'Share Tech Mono',monospace}
+.media-admin-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}
+.media-thumb-a{
+  aspect-ratio:1;border:1px solid var(--border);background:var(--navy3);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+  position:relative;overflow:hidden;cursor:crosshair;transition:all .2s;
+}
+.media-thumb-a img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.media-thumb-a:hover{border-color:var(--border2)}
+.media-del{
+  position:absolute;top:3px;right:3px;background:rgba(204,26,26,.8);color:#fff;
+  border:none;border-radius:0;width:20px;height:20px;font-size:.65rem;
+  cursor:crosshair;display:none;align-items:center;justify-content:center;
+}
+.media-thumb-a:hover .media-del{display:flex}
+.rich-editor{border:1px solid var(--border);overflow:hidden}
+.rich-toolbar{display:flex;gap:2px;flex-wrap:wrap;padding:7px;background:rgba(6,13,22,.9);border-bottom:1px solid var(--border)}
+.rtb{padding:5px 9px;background:none;border:1px solid transparent;color:var(--text-dim);cursor:crosshair;font-size:.78rem;font-family:inherit;transition:all .2s}
+.rtb:hover{background:rgba(212,175,55,.08);border-color:var(--border);color:var(--gold)}
+.rtb-sep{width:1px;height:20px;background:var(--border);margin:0 3px;align-self:center}
+.rich-content{min-height:180px;padding:14px;background:rgba(6,13,22,.8);color:var(--text);outline:none;font-size:.9rem;line-height:1.7}
+
+/* Toast */
+#toastContainer{position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--navy2);border:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;gap:10px;
+  min-width:260px;max-width:340px;
+  box-shadow:var(--glow),0 8px 30px rgba(0,0,0,.6);
+  animation:slideIn .3s ease;
+  font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.06em;
+}
+.toast-success{border-left:2px solid var(--green-l)}
+.toast-error{border-left:2px solid var(--red-l)}
+.toast-info{border-left:2px solid var(--gold)}
+.toast-icon{font-size:1rem}
+.toast-text{flex:1;color:var(--text-dim)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* About page */
+.about-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start}
+
+/* Pagination */
+.pagination{display:flex;gap:4px;justify-content:center;margin-top:28px}
+.pg-btn{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  background:rgba(9,18,30,.9);border:1px solid var(--border);
+  color:var(--text-dim);font-size:.8rem;cursor:crosshair;transition:all .2s;
+  font-family:'Share Tech Mono',monospace;
+}
+.pg-btn:hover,.pg-btn.active{border-color:var(--gold);color:var(--gold)}
+
+/* Responsive */
+@media(max-width:1100px){.roster-grid{grid-template-columns:repeat(3,1fr)}.footer-grid{grid-template-columns:1fr 1fr}.admin-stats-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){
+  .hero-inner,.about-grid,.contact-grid,.about-page-grid{grid-template-columns:1fr}
+  .hero-orbital{display:none}
+  .news-grid,.videos-grid{grid-template-columns:1fr 1fr}
+  .gallery-grid{grid-template-columns:repeat(3,1fr)}
+  .docs-grid{grid-template-columns:1fr 1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .roster-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:768px){
+  #topbar{display:none}
+  #navbar{top:0}
+  #pageContent{padding-top:64px}
+  .nav-links{display:none}
+  .nav-links.open{display:flex;flex-direction:column;position:fixed;top:64px;left:0;right:0;background:var(--navy2);border-bottom:1px solid var(--border);padding:12px;z-index:997}
+  .hamburger{display:flex}
+  .admin-sidebar{width:50px}
+  .sb-btn span:not(.sbi){display:none}
+  .sb-section{display:none}
+}
+@media(max-width:480px){
+  .news-grid,.videos-grid,.docs-grid{grid-template-columns:1fr}
+  .gallery-grid{grid-template-columns:1fr 1fr}
+  .roster-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .join-step::after{display:none}
+  .footer-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<div id="topbar">
+  <div class="container"><div class="topbar-inner">
+    <div class="tb-left">
+      <div class="tb-item"><span class="dot"></span>SYSTEM ONLINE</div>
+      <div class="tb-item"><span class="dot dot-gold"></span>GH EMPIRE FIVEM RP</div>
+      <div class="tb-item">⬛ GHPD COMMAND PORTAL v2.0</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-item" id="tbOfficerCount"><span class="dot"></span><span id="onlineNum">0</span> OFFICERS ONLINE</div>
+      <button id="adminTopBtn" onclick="showAdminLogin()">⚙ ADMIN ACCESS</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav id="navbar">
+  <div class="container"><div class="nav-inner">
+    <div class="nav-brand" onclick="showPage('home')">
+      <div class="nav-brand-icon">
+        <span class="brand-emoji" id="navBrandEmoji">🛡</span>
+        <img id="navLogo" style="display:none">
+        <div class="nav-brand-ring"></div>
+      </div>
+      <div class="nav-brand-text">
+        <div class="nav-brand-main" id="brandMain">GH EMPIRE PD</div>
+        <div class="nav-brand-sub" id="brandSub">FiveM Roleplay Division</div>
+      </div>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" onclick="showPage('home')" class="nav-link" data-page="home">HOME</a></li>
+      <li><a href="#" onclick="showPage('about')" class="nav-link" data-page="about">ABOUT</a></li>
+      <li><a href="#" onclick="showPage('roster')" class="nav-link" data-page="roster">ROSTER</a></li>
+      <li><a href="#" onclick="showPage('news')" class="nav-link" data-page="news">NEWS</a></li>
+      <li><a href="#" onclick="showPage('gallery')" class="nav-link" data-page="gallery">GALLERY</a></li>
+      <li><a href="#" onclick="showPage('documents')" class="nav-link" data-page="documents">DOCS</a></li>
+      <li><a href="#" onclick="showPage('videos')" class="nav-link" data-page="videos">VIDEOS</a></li>
+      <li><a href="#" onclick="showPage('contact')" class="nav-link" data-page="contact">CONTACT</a></li>
+      <li><a href="#" class="nav-join" onclick="showPage('join')">▶ ENLIST</a></li>
+    </ul>
+    <button class="hamburger" onclick="toggleNav()"><span></span><span></span><span></span></button>
+  </div></div>
+</nav>
+
+<!-- ═══ PAGES ═══ -->
+<div id="pageContent">
+
+<!-- ══════ HOME ══════ -->
+<div id="page-home" class="page active">
+  <!-- HERO -->
+  <section id="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="container"><div class="hero-inner">
+      <!-- Left -->
+      <div class="hero-text">
+        <div class="hero-system-id">UNIT ID: GHPD-ALPHA // STATUS: ACTIVE</div>
+        <h1 class="hero-title">
+          <span class="ht-gh">GH</span><br>
+          <span class="ht-empire">EMPIRE</span><br>
+          <span class="ht-pd">POLICE DEPT.</span>
+        </h1>
+        <p class="hero-subtitle">// SERVING · PROTECTING · UPHOLDING THE LAW</p>
+        <p class="hero-desc">The official command portal of the GH Empire Police Department — Ghana's premier FiveM law enforcement division. Professional roleplay. Elite officers. Total commitment to justice.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="showPage('join')">▶ APPLY NOW</button>
+          <button class="btn" onclick="showPage('about')">⬛ OUR MISSION</button>
+        </div>
+        <div class="hero-readout">
+          <div class="readout-line"><span class="readout-key">OFFICERS ACTIVE</span><div class="readout-bar"><div class="readout-bar-fill" style="--fill:80%"></div></div><span class="readout-val" id="rl-officers">24</span></div>
+          <div class="readout-line"><span class="readout-key">PATROL COVERAGE</span><div class="readout-bar"><div class="readout-bar-fill" style="--fill:95%"></div></div><span class="readout-val">95%</span></div>
+          <div class="readout-line"><span class="readout-key">CASES RESOLVED</span><div class="readout-bar"><div class="readout-bar-fill" style="--fill:88%"></div></div><span class="readout-val" id="rl-cases">300+</span></div>
+          <div class="readout-line"><span class="readout-key">RESPONSE RATING</span><div class="readout-bar"><div class="readout-bar-fill" style="--fill:92%"></div></div><span class="readout-val">AAA</span></div>
+        </div>
+      </div>
+      <!-- Right: Orbital -->
+      <div class="hero-orbital">
+        <div class="orbital-container">
+          <div class="hud-cross h"></div>
+          <div class="hud-cross v"></div>
+          <div class="orbit-ring ring-1"></div>
+          <div class="orbit-ring ring-2"></div>
+          <div class="orbit-ring ring-3"></div>
+          <div class="orbit-ring ring-4"></div>
+          <div class="radar-sweep"></div>
+          <div class="ring-ticks" id="ringTicks"></div>
+          <div class="orbit-dot-1"></div>
+          <div class="orbit-dot-2"></div>
+          <div class="orbit-dot-3"></div>
+          <div class="center-circle">
+            <span class="center-logo-emoji" id="heroLogoEmoji">🛡</span>
+            <img class="center-logo" id="heroLogoImg" style="display:none">
+            <div class="center-badge-text">GHPD · ACTIVE</div>
+          </div>
+          <!-- HUD data labels -->
+          <div class="hud-data hud-d1">
+            <div>SYS::ONLINE</div>
+            <div class="hud-data-line">LAT: 05°33'N</div>
+            <div class="hud-data-line">LNG: 00°12'W</div>
+          </div>
+          <div class="hud-data hud-d2">
+            <div>UNIT::ALPHA</div>
+            <div class="hud-data-line">FREQ: 14.750</div>
+            <div class="hud-data-line">ENC: AES-256</div>
+          </div>
+          <div class="hud-data hud-d3">
+            <div>PATROL::ACTIVE</div>
+            <div class="hud-data-line" id="hudTime">--:--:--</div>
+          </div>
+          <div class="hud-data hud-d4">
+            <div>GHPD::CMD</div>
+            <div class="hud-data-line">BUILD: 2.0.4</div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-label">DISPATCH</div>
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- STATS BAND -->
+  <div class="stats-band">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-gfx">👮</div><div class="stat-num" id="sOfficers">24</div><div class="stat-lbl" id="sOfficersLbl">Officers on Roster</div></div>
+        <div class="stat-cell"><div class="stat-gfx">🚔</div><div class="stat-num" id="sPatrols">150+</div><div class="stat-lbl" id="sPatrolsLbl">Patrols This Month</div></div>
+        <div class="stat-cell"><div class="stat-gfx">⚖️</div><div class="stat-num" id="sCases">300+</div><div class="stat-lbl" id="sCasesLbl">Cases Resolved</div></div>
+        <div class="stat-cell"><div class="stat-gfx">🎖️</div><div class="stat-num" id="sAwards">48</div><div class="stat-lbl" id="sAwardsLbl">Commendations</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEWS PREVIEW -->
+  <section class="section" style="background:var(--navy2)">
+    <div class="container">
+      <div class="sec-label">DISPATCH FEED</div>
+      <div class="sec-title">DEPARTMENT <span>NEWS</span></div>
+      <div class="divider"></div>
+      <div class="news-grid" id="homeNewsGrid"></div>
+      <div style="text-align:center;margin-top:32px">
+        <button class="btn" onclick="showPage('news')">ACCESS FULL FEED ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT PREVIEW -->
+  <section class="section">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-vis">
+          <div class="about-vis-bg"></div>
+          <div class="about-orbital-mini">
+            <div class="about-center" id="aboutCenterLogo">🛡</div>
+            <div class="about-ring-outer"></div>
+            <div class="about-ring-mid"></div>
+            <div class="about-stats-float asf1"><div class="asf-num" id="asf-officers">24</div><div class="asf-label">Officers</div></div>
+            <div class="about-stats-float asf2"><div class="asf-num">6</div><div class="asf-label">Divisions</div></div>
+            <div class="about-stats-float asf3"><div class="asf-num" id="asf-patrols">150+</div><div class="asf-label">Patrols</div></div>
+            <div class="about-stats-float asf4"><div class="asf-num" id="asf-cases">300+</div><div class="asf-label">Cases</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-label">OUR MISSION</div>
+          <div class="sec-title">ABOUT <span>GHPD</span></div>
+          <div class="divider"></div>
+          <p style="color:var(--text-dim);line-height:1.8;margin-bottom:14px">The GH Empire Police Department is the premier law enforcement agency within the Ghana Empire FiveM roleplay server. We maintain order, uphold justice, and deliver the most immersive police RP experience in the community.</p>
+          <p style="color:var(--text-dim);line-height:1.8;margin-bottom:28px">Our officers follow strict protocols, undergo rigorous training, and operate with unmatched professionalism — making every interaction authentic, fair, and exciting.</p>
+          <div class="pillars">
+            <div class="pillar"><div class="pillar-icon">⚖️</div><div class="pillar-title">JUSTICE</div><div class="pillar-desc">Fair, consistent law enforcement for all</div></div>
+            <div class="pillar"><div class="pillar-icon">🛡️</div><div class="pillar-title">PROTECTION</div><div class="pillar-desc">Safeguarding every citizen of the empire</div></div>
+            <div class="pillar"><div class="pillar-icon">🤝</div><div class="pillar-title">SERVICE</div><div class="pillar-desc">Community-first approach to policing</div></div>
+            <div class="pillar"><div class="pillar-icon">🎖️</div><div class="pillar-title">HONOR</div><div class="pillar-desc">Upholding the badge with integrity</div></div>
+          </div>
+          <div style="margin-top:24px">
+            <button class="btn btn-primary" onclick="showPage('about')">▶ FULL BRIEFING</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOIN CTA -->
+  <section class="join-section">
+    <canvas id="joinCanvas"></canvas>
+    <div class="container" style="position:relative;z-index:2">
+      <div class="sec-label" style="justify-content:center;margin-bottom:16px">RECRUITMENT OPEN</div>
+      <div class="join-title">JOIN THE FORCE</div>
+      <p class="join-desc">Ready to protect and serve the Ghana Empire? We are actively recruiting dedicated, serious roleplayers. No prior police RP experience required — only commitment, availability, and passion.</p>
+      <div class="join-steps">
+        <div class="join-step"><div class="js-num">01</div><div class="js-label">Apply Online</div></div>
+        <div class="join-step"><div class="js-num">02</div><div class="js-label">Interview</div></div>
+        <div class="join-step"><div class="js-num">03</div><div class="js-label">Academy Training</div></div>
+        <div class="join-step"><div class="js-num">04</div><div class="js-label">Begin Duty</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="showPage('join')" style="font-size:.75rem;padding:14px 36px;letter-spacing:.2em">▶▶ APPLY NOW</button>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ ABOUT PAGE ══════ -->
+<div id="page-about" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">THE DEPARTMENT</div>
+      <div class="sec-title">ABOUT <span>GH EMPIRE PD</span></div>
+      <div class="divider"></div>
+      <div class="about-page-grid">
+        <div id="aboutContent" style="color:var(--text-dim);line-height:1.8">
+          <p>The GH Empire Police Department was established as the official law enforcement division of the Ghana Empire FiveM roleplay server, built to deliver the most authentic and immersive police experience in the West African gaming community.</p>
+        </div>
+        <div class="about-vis" style="max-width:100%">
+          <div class="about-orbital-mini" style="height:300px">
+            <div class="about-center" id="aboutPageCenter">🛡</div>
+            <div class="about-ring-outer"></div>
+            <div class="about-ring-mid"></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:50px">
+        <div class="sec-label">DIVISIONS</div>
+        <div class="sec-title" style="font-size:1.3rem">OPERATIONAL <span>UNITS</span></div>
+        <div class="divider"></div>
+        <div class="docs-grid" id="divisionsGrid"></div>
+      </div>
+      <div style="margin-top:50px">
+        <div class="sec-label">STRUCTURE</div>
+        <div class="sec-title" style="font-size:1.3rem">COMMAND <span>HIERARCHY</span></div>
+        <div class="divider"></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>RANK</th><th>DESCRIPTION</th><th>RESPONSIBILITIES</th></tr></thead>
+            <tbody id="rankTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ ROSTER ══════ -->
+<div id="page-roster" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">PERSONNEL DATABASE</div>
+      <div class="sec-title">OFFICER <span>ROSTER</span></div>
+      <div class="divider"></div>
+      <div class="roster-filters" id="rosterFilters"></div>
+      <div class="roster-grid" id="rosterGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ NEWS ══════ -->
+<div id="page-news" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">DISPATCH FEED</div>
+      <div class="sec-title">NEWS &amp; <span>ANNOUNCEMENTS</span></div>
+      <div class="divider"></div>
+      <div id="announcementBanner"></div>
+      <div class="news-grid" id="newsGrid"></div>
+      <div class="pagination" id="newsPagination"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ GALLERY ══════ -->
+<div id="page-gallery" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">MEDIA ARCHIVE</div>
+      <div class="sec-title">PHOTO <span>GALLERY</span></div>
+      <div class="divider"></div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ DOCUMENTS ══════ -->
+<div id="page-documents" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">SECURE ARCHIVE</div>
+      <div class="sec-title">DOCUMENTS &amp; <span>POLICIES</span></div>
+      <div class="divider"></div>
+      <div class="docs-grid" id="docsGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ VIDEOS ══════ -->
+<div id="page-videos" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">OPERATIONS FOOTAGE</div>
+      <div class="sec-title">VIDEOS &amp; <span>HIGHLIGHTS</span></div>
+      <div class="divider"></div>
+      <div class="videos-grid" id="videosGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ JOIN ══════ -->
+<div id="page-join" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container" style="max-width:760px">
+      <div class="sec-label">RECRUITMENT</div>
+      <div class="sec-title">ENLIST IN <span>GHPD</span></div>
+      <div class="divider"></div>
+      <div class="contact-form-box">
+        <div class="announcement-banner"><div class="ann-pulse"></div><span>RECRUITMENT STATUS: <span style="color:var(--gold)">OPEN</span> — Applications reviewed within 48 hours</span></div>
+        <div id="joinFormContainer">
+          <div class="form-group"><label class="form-label">In-Game Name (IGN)</label><input type="text" class="form-control" id="joinIGN" placeholder="Your FiveM character name"></div>
+          <div class="form-group"><label class="form-label">Discord Username</label><input type="text" class="form-control" id="joinDiscord" placeholder="username#0000"></div>
+          <div class="form-group"><label class="form-label">FiveM Experience</label>
+            <select class="form-control" id="joinExp"><option value="">Select...</option><option>Less than 1 month</option><option>1-3 months</option><option>3-6 months</option><option>6-12 months</option><option>Over 1 year</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Prior Police RP Experience?</label>
+            <select class="form-control" id="joinPrior"><option value="">Select...</option><option>Yes, extensive</option><option>Yes, some</option><option>No, willing to learn</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Why do you want to join GHPD?</label><textarea class="form-control" id="joinReason" rows="5" placeholder="Tell us why..."></textarea></div>
+          <div class="form-group"><label class="form-label">What can you contribute?</label><textarea class="form-control" id="joinContrib" rows="4" placeholder="Skills, availability, ideas..."></textarea></div>
+          <div style="display:flex;gap:12px;margin-top:8px">
+            <button class="btn btn-primary" onclick="submitApp()" style="flex:1">▶ SUBMIT APPLICATION</button>
+            <button class="btn btn-danger" onclick="resetJoin()">RESET</button>
+          </div>
+        </div>
+        <div id="joinSuccess" class="hidden" style="text-align:center;padding:40px 0">
+          <div style="font-size:3rem;margin-bottom:16px">✅</div>
+          <div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--gold);margin-bottom:12px;letter-spacing:.08em">APPLICATION SUBMITTED</div>
+          <p style="color:var(--text-dim);line-height:1.7;font-family:'Share Tech Mono',monospace;font-size:.78rem">Our recruitment team will contact you via Discord within 48 hours. Stand by.</p>
+          <button class="btn" style="margin-top:24px" onclick="document.getElementById('joinSuccess').classList.add('hidden');document.getElementById('joinFormContainer').classList.remove('hidden')">SUBMIT ANOTHER</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══════ CONTACT ══════ -->
+<div id="page-contact" class="page">
+  <section class="section" style="background:var(--navy2);padding-top:60px">
+    <div class="container">
+      <div class="sec-label">COMMUNICATIONS</div>
+      <div class="sec-title">CONTACT <span>GHPD</span></div>
+      <div class="divider"></div>
+      <div class="contact-grid">
+        <div>
+          <p style="color:var(--text-dim);line-height:1.8;margin-bottom:24px;font-size:.9rem">Reach out through any of our official channels. Community managers are available daily.</p>
+          <div class="contact-links">
+            <div class="contact-link"><div class="cl-icon">💬</div><div><div class="cl-label">Discord</div><div class="cl-value" id="ctcDiscord">discord.gg/ghempire</div></div></div>
+            <div class="contact-link"><div class="cl-icon">🎮</div><div><div class="cl-label">FiveM Server</div><div class="cl-value" id="ctcFivem">GH Empire RP</div></div></div>
+            <div class="contact-link"><div class="cl-icon">📺</div><div><div class="cl-label">YouTube</div><div class="cl-value" id="ctcYoutube">GH Empire Police</div></div></div>
+            <div class="contact-link"><div class="cl-icon">📸</div><div><div class="cl-label">Instagram</div><div class="cl-value" id="ctcInsta">@ghempirepd</div></div></div>
+          </div>
+        </div>
+        <div class="contact-form-box">
+          <div class="contact-form-title">// SEND A MESSAGE</div>
+          <div class="form-group"><label class="form-label">Your Name</label><input type="text" class="form-control" id="ctcName" placeholder="Full name"></div>
+          <div class="form-group"><label class="form-label">Discord Username</label><input type="text" class="form-control" id="ctcDiscordUser" placeholder="username#0000"></div>
+          <div class="form-group"><label class="form-label">Subject</label><input type="text" class="form-control" id="ctcSubject" placeholder="Topic..."></div>
+          <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" id="ctcMsg" rows="5" placeholder="Your message..."></textarea></div>
+          <button class="btn btn-primary" style="width:100%" onclick="submitContact()">▶ TRANSMIT MESSAGE</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+</div><!-- end pageContent -->
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="ghana-bar"></div>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-brand" style="cursor:default">
+          <div class="nav-brand-icon"><span class="brand-emoji" id="footerLogoEmoji">🛡</span><div class="nav-brand-ring"></div></div>
+          <div class="nav-brand-text">
+            <div class="nav-brand-main">GH EMPIRE PD</div>
+            <div class="nav-brand-sub">FiveM Roleplay Division</div>
+          </div>
+        </div>
+        <p>The official law enforcement division of the Ghana Empire FiveM roleplay server. Dedicated to the most immersive and professional police roleplay in the community.</p>
+      </div>
+      <div class="footer-col"><h4>NAVIGATION</h4><ul>
+        <li><a onclick="showPage('home')">HOME</a></li>
+        <li><a onclick="showPage('about')">ABOUT</a></li>
+        <li><a onclick="showPage('roster')">ROSTER</a></li>
+        <li><a onclick="showPage('news')">NEWS</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>RESOURCES</h4><ul>
+        <li><a onclick="showPage('documents')">DOCUMENTS</a></li>
+        <li><a onclick="showPage('gallery')">GALLERY</a></li>
+        <li><a onclick="showPage('videos')">VIDEOS</a></li>
+        <li><a onclick="showPage('join')">ENLIST</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>CONNECT</h4><ul>
+        <li><a>💬 DISCORD</a></li>
+        <li><a>🎮 FIVEM</a></li>
+        <li><a>📺 YOUTUBE</a></li>
+        <li><a onclick="showPage('contact')">📬 CONTACT</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2024 GH EMPIRE POLICE DEPARTMENT · FIVEM RP · ALL RIGHTS RESERVED</div>
+      <div class="footer-sys"><div class="sys-dot"></div>SYSTEM ONLINE · 🇬🇭 GHANA EMPIRE</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ ADMIN LOGIN ═══ -->
+<div id="adminLoginOverlay" class="hidden">
+  <div class="login-card">
+    <div class="login-orbital">
+      <div class="login-center"><img id="loginLogoImg" style="display:none"><span id="loginEmoji">🛡</span></div>
+      <div class="login-ring"></div>
+    </div>
+    <div class="login-title">GHPD ADMIN ACCESS</div>
+    <div class="login-sub">Authorized Personnel Only</div>
+    <div class="login-cursor" id="loginCursor">// AWAITING CREDENTIALS_</div>
+    <div id="loginAlert"></div>
+    <div class="form-group"><label class="form-label">USERNAME</label><input type="text" class="form-control" id="loginUser" value="admin" placeholder="admin"></div>
+    <div class="form-group"><label class="form-label">PASSWORD</label><input type="password" class="form-control" id="loginPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:10px;letter-spacing:.2em" onclick="doLogin()">▶ AUTHENTICATE</button>
+    <button class="btn btn-danger" style="width:100%" onclick="document.getElementById('adminLoginOverlay').classList.add('hidden')">ABORT</button>
+    <div style="margin-top:14px;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.1em">DEFAULT: admin / ghpd2024</div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<div id="adminPanel" class="hidden">
+  <div class="admin-topbar">
+    <div class="atb-brand">
+      <div class="atb-orbital">
+        <div class="atb-center"><span id="atbLogoEmoji">🛡</span></div>
+        <div class="atb-ring"></div>
+      </div>
+      <div>
+        <div class="atb-text-main">GHPD COMMAND — ADMIN</div>
+        <div class="atb-text-sub">Content Management System</div>
+      </div>
+    </div>
+    <div class="atb-right">
+      <button class="btn btn-sm" onclick="exitAdmin()">◄ VIEW SITE</button>
+      <div class="atb-user">
+        <div class="atb-avatar" id="adminAvatar">A</div>
+        <span id="adminUserLbl">Administrator</span>
+      </div>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-sidebar">
+      <div class="sb-section">MAIN</div>
+      <button class="sb-btn active" onclick="openAdminPane('dashboard')" id="sb-dashboard"><span class="sbi">📊</span><span>Dashboard</span></button>
+      <div class="sb-section">CONTENT</div>
+      <button class="sb-btn" onclick="openAdminPane('news')" id="sb-news"><span class="sbi">🗞</span><span>News</span></button>
+      <button class="sb-btn" onclick="openAdminPane('roster')" id="sb-roster"><span class="sbi">👮</span><span>Roster</span></button>
+      <button class="sb-btn" onclick="openAdminPane('documents')" id="sb-documents"><span class="sbi">📁</span><span>Documents</span></button>
+      <button class="sb-btn" onclick="openAdminPane('gallery')" id="sb-gallery"><span class="sbi">🖼</span><span>Gallery</span></button>
+      <button class="sb-btn" onclick="openAdminPane('videos')" id="sb-videos"><span class="sbi">🎬</span><span>Videos</span></button>
+      <div class="sb-section">SITE</div>
+      <button class="sb-btn" onclick="openAdminPane('about')" id="sb-about"><span class="sbi">🏛</span><span>About Page</span></button>
+      <button class="sb-btn" onclick="openAdminPane('applications')" id="sb-applications"><span class="sbi">📋</span><span>Applications</span></button>
+      <button class="sb-btn" onclick="openAdminPane('messages')" id="sb-messages"><span class="sbi">📬</span><span>Messages</span></button>
+      <div class="sb-section">ADMIN</div>
+      <button class="sb-btn" onclick="openAdminPane('settings')" id="sb-settings"><span class="sbi">⚙</span><span>Settings</span></button>
+      <button class="sb-btn" onclick="openAdminPane('users')" id="sb-users"><span class="sbi">👤</span><span>Users</span></button>
+    </div>
+    <div class="admin-content">
+      <!-- DASHBOARD -->
+      <div class="admin-pane active" id="pane-dashboard">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">📊 COMMAND DASHBOARD</div><div class="apane-sub">// System overview and quick actions</div></div>
+        </div>
+        <div class="admin-stats-grid" id="dashStats"></div>
+        <div class="admin-qactions">
+          <button class="btn btn-primary btn-sm" onclick="openAdminPane('news');setTimeout(()=>openNewsModal(),100)">+ POST NEWS</button>
+          <button class="btn btn-sm" onclick="openAdminPane('roster');setTimeout(()=>openOfficerModal(),100)">+ ADD OFFICER</button>
+          <button class="btn btn-sm" onclick="openAdminPane('documents');setTimeout(()=>openDocModal(),100)">+ ADD DOCUMENT</button>
+          <button class="btn btn-sm" onclick="openAdminPane('videos');setTimeout(()=>openVideoModal(),100)">+ ADD VIDEO</button>
+          <button class="btn btn-sm" onclick="openAdminPane('gallery')">📸 GALLERY</button>
+          <button class="btn btn-sm" onclick="openAdminPane('settings')">⚙ SETTINGS</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div><div style="font-family:'Orbitron',monospace;font-size:.75rem;color:var(--gold);margin-bottom:10px;letter-spacing:.08em">// RECENT ACTIVITY</div><div class="activity-list" id="actList"></div></div>
+          <div><div style="font-family:'Orbitron',monospace;font-size:.75rem;color:var(--gold);margin-bottom:10px;letter-spacing:.08em">// PENDING APPLICATIONS</div><div class="activity-list" id="dashApps"></div></div>
+        </div>
+      </div>
+      <!-- NEWS -->
+      <div class="admin-pane" id="pane-news">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">🗞 NEWS MANAGEMENT</div><div class="apane-sub">// Create and manage department communications</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openNewsModal()">+ NEW POST</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>TITLE</th><th>CATEGORY</th><th>AUTHOR</th><th>DATE</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="newsAdminBody"></tbody></table></div>
+      </div>
+      <!-- ROSTER -->
+      <div class="admin-pane" id="pane-roster">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">👮 ROSTER MANAGEMENT</div><div class="apane-sub">// Manage active and inactive officers</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openOfficerModal()">+ ADD OFFICER</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>BADGE</th><th>NAME</th><th>RANK</th><th>DIVISION</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="rosterAdminBody"></tbody></table></div>
+      </div>
+      <!-- DOCUMENTS -->
+      <div class="admin-pane" id="pane-documents">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">📁 DOCUMENT ARCHIVE</div><div class="apane-sub">// Policies, manuals, and official documents</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openDocModal()">+ ADD DOCUMENT</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>TITLE</th><th>CATEGORY</th><th>TYPE</th><th>DATE</th><th>ACTIONS</th></tr></thead><tbody id="docsAdminBody"></tbody></table></div>
+      </div>
+      <!-- GALLERY -->
+      <div class="admin-pane" id="pane-gallery">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">🖼 PHOTO GALLERY</div><div class="apane-sub">// Department photos and screenshots</div></div>
+          <button class="btn btn-primary btn-sm" onclick="triggerUpload('galInput')">+ UPLOAD PHOTOS</button>
+        </div>
+        <input type="file" id="galInput" accept="image/*" multiple class="hidden" onchange="handleGalUpload(this)">
+        <div class="upload-zone" onclick="triggerUpload('galInput')">
+          <div class="uz-icon">📸</div>
+          <div class="uz-text">DROP IMAGES HERE OR CLICK TO UPLOAD</div>
+          <div class="uz-sub">JPG · PNG · GIF · WEBP — MAX 10MB</div>
+        </div>
+        <div class="media-admin-grid" id="galAdminGrid"></div>
+      </div>
+      <!-- VIDEOS -->
+      <div class="admin-pane" id="pane-videos">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">🎬 VIDEO ARCHIVE</div><div class="apane-sub">// YouTube videos and operation highlights</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openVideoModal()">+ ADD VIDEO</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>TITLE</th><th>YOUTUBE ID</th><th>CATEGORY</th><th>DATE</th><th>ACTIONS</th></tr></thead><tbody id="videosAdminBody"></tbody></table></div>
+      </div>
+      <!-- ABOUT -->
+      <div class="admin-pane" id="pane-about">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">🏛 ABOUT PAGE EDITOR</div><div class="apane-sub">// Edit department content and divisions</div></div>
+          <button class="btn btn-primary btn-sm" onclick="saveAbout()">💾 SAVE</button>
+        </div>
+        <div class="settings-card">
+          <h4>DEPARTMENT DESCRIPTION</h4>
+          <div class="rich-editor">
+            <div class="rich-toolbar">
+              <button class="rtb" onclick="execCmd('bold')"><b>B</b></button>
+              <button class="rtb" onclick="execCmd('italic')"><i>I</i></button>
+              <button class="rtb" onclick="execCmd('underline')"><u>U</u></button>
+              <div class="rtb-sep"></div>
+              <button class="rtb" onclick="execCmd('insertUnorderedList')">• LIST</button>
+              <button class="rtb" onclick="execCmd('insertOrderedList')">1. LIST</button>
+              <div class="rtb-sep"></div>
+              <button class="rtb" onclick="execCmd('justifyLeft')">⬅</button>
+              <button class="rtb" onclick="execCmd('justifyCenter')">⬛</button>
+              <button class="rtb" onclick="execCmd('justifyRight')">➡</button>
+            </div>
+            <div class="rich-content" id="aboutEditor" contenteditable="true"></div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h4>HOMEPAGE STATISTICS</h4>
+          <div class="settings-grid">
+            <div class="form-group"><label class="form-label">Officers (number)</label><input type="text" class="form-control" id="se-officers"></div>
+            <div class="form-group"><label class="form-label">Patrols (number)</label><input type="text" class="form-control" id="se-patrols"></div>
+            <div class="form-group"><label class="form-label">Cases (number)</label><input type="text" class="form-control" id="se-cases"></div>
+            <div class="form-group"><label class="form-label">Awards (number)</label><input type="text" class="form-control" id="se-awards"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveStats()">UPDATE STATS</button>
+        </div>
+        <div class="settings-card">
+          <h4>DIVISIONS MANAGEMENT</h4>
+          <div id="divsAdminList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px"></div>
+          <button class="btn btn-sm" onclick="addDivision()">+ ADD DIVISION</button>
+        </div>
+      </div>
+      <!-- APPLICATIONS -->
+      <div class="admin-pane" id="pane-applications">
+        <div class="admin-pane-hdr"><div><div class="apane-title">📋 APPLICATIONS</div><div class="apane-sub">// Recruitment applications</div></div></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>IGN</th><th>DISCORD</th><th>EXPERIENCE</th><th>DATE</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="appsBody"></tbody></table></div>
+      </div>
+      <!-- MESSAGES -->
+      <div class="admin-pane" id="pane-messages">
+        <div class="admin-pane-hdr"><div><div class="apane-title">📬 MESSAGES</div><div class="apane-sub">// Contact form submissions</div></div></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>NAME</th><th>DISCORD</th><th>SUBJECT</th><th>DATE</th><th>ACTIONS</th></tr></thead><tbody id="msgsBody"></tbody></table></div>
+      </div>
+      <!-- SETTINGS -->
+      <div class="admin-pane" id="pane-settings">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">⚙ SITE SETTINGS</div><div class="apane-sub">// Configure department portal</div></div>
+          <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 SAVE ALL</button>
+        </div>
+        <div class="settings-card"><h4>GENERAL INFORMATION</h4>
+          <div class="settings-grid">
+            <div class="form-group"><label class="form-label">Department Name</label><input type="text" class="form-control" id="ss-deptName"></div>
+            <div class="form-group"><label class="form-label">Short Name / Tag</label><input type="text" class="form-control" id="ss-shortName"></div>
+            <div class="form-group"><label class="form-label">Server Name</label><input type="text" class="form-control" id="ss-serverName"></div>
+            <div class="form-group"><label class="form-label">Motto / Tagline</label><input type="text" class="form-control" id="ss-motto"></div>
+          </div>
+        </div>
+        <div class="settings-card"><h4>SOCIAL & SERVER LINKS</h4>
+          <div class="settings-grid">
+            <div class="form-group"><label class="form-label">Discord Invite</label><input type="text" class="form-control" id="ss-discord"></div>
+            <div class="form-group"><label class="form-label">FiveM Server</label><input type="text" class="form-control" id="ss-fivem"></div>
+            <div class="form-group"><label class="form-label">YouTube Channel</label><input type="text" class="form-control" id="ss-youtube"></div>
+            <div class="form-group"><label class="form-label">Instagram Handle</label><input type="text" class="form-control" id="ss-insta"></div>
+          </div>
+        </div>
+        <div class="settings-card"><h4>HOMEPAGE STATS</h4>
+          <div class="settings-grid">
+            <div class="form-group"><label class="form-label">Stat 1 — Value</label><input type="text" class="form-control" id="ss-s1num"></div>
+            <div class="form-group"><label class="form-label">Stat 1 — Label</label><input type="text" class="form-control" id="ss-s1lbl"></div>
+            <div class="form-group"><label class="form-label">Stat 2 — Value</label><input type="text" class="form-control" id="ss-s2num"></div>
+            <div class="form-group"><label class="form-label">Stat 2 — Label</label><input type="text" class="form-control" id="ss-s2lbl"></div>
+            <div class="form-group"><label class="form-label">Stat 3 — Value</label><input type="text" class="form-control" id="ss-s3num"></div>
+            <div class="form-group"><label class="form-label">Stat 3 — Label</label><input type="text" class="form-control" id="ss-s3lbl"></div>
+            <div class="form-group"><label class="form-label">Stat 4 — Value</label><input type="text" class="form-control" id="ss-s4num"></div>
+            <div class="form-group"><label class="form-label">Stat 4 — Label</label><input type="text" class="form-control" id="ss-s4lbl"></div>
+          </div>
+        </div>
+        <div class="settings-card"><h4>NEWS TICKER MESSAGES</h4>
+          <p style="font-size:.78rem;color:var(--text-dim);margin-bottom:14px;font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.05em">One message per line — scrolls across the dispatch ticker on homepage</p>
+          <textarea class="form-control" id="ss-ticker" rows="5" placeholder="Recruitment is now OPEN&#10;New patrol routes released&#10;Weekend community event announced"></textarea>
+        </div>
+        <div class="settings-card"><h4>SITE ANNOUNCEMENT</h4>
+          <div class="form-group"><label class="form-label">Announcement (shown on news page)</label><input type="text" class="form-control" id="ss-announcement"></div>
+        </div>
+        <div class="settings-card"><h4>DEPARTMENT LOGO</h4>
+          <div class="upload-zone" onclick="triggerUpload('logoInput')">
+            <input type="file" id="logoInput" accept="image/*" class="hidden" onchange="handleLogoUpload(this)">
+            <div class="uz-icon">🛡️</div>
+            <div class="uz-text">CLICK TO UPLOAD LOGO</div>
+            <div class="uz-sub">PNG RECOMMENDED — TRANSPARENT BACKGROUND</div>
+          </div>
+          <div id="logoPreviewWrap" style="margin-top:14px;display:flex;align-items:center;gap:14px">
+            <img id="logoPreview" style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(212,175,55,.5))">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:.1em">CURRENT LOGO</span>
+          </div>
+        </div>
+        <div class="settings-card"><h4>ADMIN PASSWORD</h4>
+          <div class="settings-grid">
+            <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-control" id="ss-newpass"></div>
+            <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-control" id="ss-confpass"></div>
+          </div>
+          <button class="btn btn-sm" onclick="changePass()">UPDATE PASSWORD</button>
+        </div>
+      </div>
+      <!-- USERS -->
+      <div class="admin-pane" id="pane-users">
+        <div class="admin-pane-hdr">
+          <div><div class="apane-title">👤 ADMIN USERS</div><div class="apane-sub">// Manage administrator accounts</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ ADD ADMIN</button>
+        </div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>USERNAME</th><th>DISPLAY NAME</th><th>ROLE</th><th>CREATED</th><th>ACTIONS</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeMod(event)">
+  <div class="modal-box" id="modalBox" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-ttl" id="modalTitle"></div><button class="modal-x" onclick="closeMod()">✕</button></div>
+    <div class="modal-bdy" id="modalBody"></div>
+    <div class="modal-ftr" id="modalFooter"></div>
+  </div>
+</div>
+<div id="newsReadModal" class="modal-overlay hidden" onclick="closeNewsRead(event)">
+  <div class="modal-box modal-box-lg" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-ttl">// NEWS ARTICLE</div><button class="modal-x" onclick="closeNewsRead()">✕</button></div>
+    <div class="modal-bdy" id="newsReadBody"></div>
+  </div>
+</div>
+<div id="msgModal" class="modal-overlay hidden" onclick="this.classList.add('hidden')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><div class="modal-ttl">// MESSAGE DETAILS</div><button class="modal-x" onclick="document.getElementById('msgModal').classList.add('hidden')">✕</button></div>
+    <div class="modal-bdy" id="msgModalBody"></div>
+  </div>
+</div>
+<div id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CANVAS ANIMATION + ALL JAVASCRIPT
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// HERO CANVAS — particle field + hex grid
+// ═══════════════════════════════════════════════════════════
+(function initHeroCanvas() {
+  const canvas = document.getElementById('heroCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], frame = 0;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+
+  function Particle() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.r = Math.random() * 1.5 + 0.5;
+    this.alpha = Math.random() * 0.4 + 0.1;
+    this.color = Math.random() > 0.7 ? '#D4AF37' : Math.random() > 0.5 ? '#CC1A1A' : '#1A7A1A';
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+  }
+
+  function drawHexGrid() {
+    const size = 30, cols = Math.ceil(W / (size * 1.73)) + 2, rows = Math.ceil(H / (size * 1.5)) + 2;
+    ctx.strokeStyle = 'rgba(212,175,55,0.04)';
+    ctx.lineWidth = 0.5;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = c * size * 1.73 + (r % 2) * size * 0.865;
+        const y = r * size * 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i - Math.PI / 6;
+          const px = x + size * Math.cos(angle);
+          const py = y + size * Math.sin(angle);
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawLines() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          ctx.strokeStyle = `rgba(212,175,55,${0.06 * (1 - dist / 100)})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    drawHexGrid();
+    drawLines();
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+    // Scan sweep horizontal
+    const scanY = ((frame * 0.5) % H);
+    const grad = ctx.createLinearGradient(0, scanY - 40, 0, scanY + 4);
+    grad.addColorStop(0, 'rgba(212,175,55,0)');
+    grad.addColorStop(1, 'rgba(212,175,55,0.04)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, scanY - 40, W, 44);
+    frame++;
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', () => { resize(); });
+  init();
+  animate();
+})();
+
+// Join section canvas
+(function initJoinCanvas() {
+  const canvas = document.getElementById('joinCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resize() { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; }
+  resize();
+  function drawRings() {
+    const cx = W / 2, cy = H / 2, t = Date.now() / 1000;
+    for (let i = 1; i <= 5; i++) {
+      const r = 40 + i * 50 + Math.sin(t * 0.5 + i) * 5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(212,175,55,${0.04 - i * 0.005})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    requestAnimationFrame(() => { ctx.clearRect(0, 0, W, H); drawRings(); });
+  }
+  drawRings();
+  window.addEventListener('resize', resize);
+})();
+
+// ═══ LIVE CLOCK ═══
+function updateClock() {
+  const el = document.getElementById('hudTime');
+  if (el) el.textContent = new Date().toTimeString().substr(0, 8);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══ RING TICKS ═══
+(function buildTicks() {
+  const wrap = document.getElementById('ringTicks');
+  if (!wrap) return;
+  for (let i = 0; i < 72; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    const isLong = i % 6 === 0;
+    tick.style.cssText = `height:${isLong?'12':'6'}px;transform-origin:bottom center;transform:translateX(-50%) rotate(${i*5}deg);opacity:${isLong?0.6:0.25}`;
+    wrap.appendChild(tick);
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════════════════════
+const DB = {
+  get(k, def) { try { const v = localStorage.getItem('ghpd2_'+k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set(k, v) { try { localStorage.setItem('ghpd2_'+k, JSON.stringify(v)); } catch {} }
+};
+
+function initData() {
+  if (DB.get('init')) return;
+  DB.set('password', 'ghpd2024');
+  DB.set('settings', {
+    deptName:'GH Empire Police Department', shortName:'GH EMPIRE PD', serverName:'GH Empire RP',
+    motto:'Serving · Protecting · Upholding the Law',
+    discord:'discord.gg/ghempire', fivem:'GH Empire RP', youtube:'GH Empire Police', insta:'@ghempirepd',
+    announcement:'Recruitment is currently OPEN — Apply now to join the force!',
+    ticker:['RECRUITMENT NOW OPEN — Apply through the Enlist page','New patrol routes released — all officers review docs','Officer Kofi Asante promoted to Sergeant — congratulations!','Community patrol event Saturday — all units report','Server update scheduled — standby for maintenance'],
+    stats:{officers:'24',patrols:'150+',cases:'300+',awards:'48'},
+    statLabels:{s1:'Officers on Roster',s2:'Patrols This Month',s3:'Cases Resolved',s4:'Commendations'}
+  });
+  DB.set('news', [
+    {id:1,title:'Recruitment Drive: Applications Now Open',category:'Announcement',author:'Commissioner Mensah',date:'2024-12-01',status:'published',excerpt:'The GHPD is proud to announce that applications for new officer positions are now open. We are seeking dedicated, serious roleplayers.',body:'The GH Empire Police Department is proud to announce that applications for new officer positions are now open.\n\nWe are seeking dedicated, professional, and passionate individuals committed to the highest standards of police roleplay.\n\nNo prior police RP experience required — only commitment, availability, and desire to serve.\n\nApplications close at end of month. Apply through the Enlist page.',icon:'📢'},
+    {id:2,title:'Officer Kofi Asante Promoted to Sergeant',category:'Promotion',author:'Deputy Chief Osei',date:'2024-11-28',status:'published',excerpt:'After months of outstanding service, Officer Kofi Asante has been promoted to Sergeant effective immediately.',body:'After months of exemplary service, Officer Kofi Asante has been promoted to Sergeant, effective immediately.\n\nSergeant Asante demonstrated consistent leadership, professionalism, and commitment to the highest standards of police roleplay.\n\nPlease join us in congratulating Sergeant Asante on this well-deserved promotion.',icon:'🎖'},
+    {id:3,title:'New Patrol Routes Established Downtown',category:'Operations',author:'Captain Adjei',date:'2024-11-20',status:'published',excerpt:'Following increased civilian activity downtown, new patrol routes have been established for better community coverage.',body:'Following increased civilian activity in the downtown district, new patrol routes have been established.\n\nAll officers are required to review updated patrol maps in the Documents section. New routes take effect immediately.\n\nDirect questions to your immediate supervisor.',icon:'🗺'}
+  ]);
+  DB.set('officers', [
+    {id:1,badge:'GHPD-001',name:'Emmanuel Mensah',rank:'Commissioner',division:'Command',status:'active',emoji:'👨‍✈️'},
+    {id:2,badge:'GHPD-002',name:'Abena Osei',rank:'Deputy Chief',division:'Command',status:'active',emoji:'👩‍✈️'},
+    {id:3,badge:'GHPD-010',name:'Kwame Adjei',rank:'Captain',division:'Patrol',status:'active',emoji:'👮'},
+    {id:4,badge:'GHPD-015',name:'Akosua Boateng',rank:'Lieutenant',division:'Investigations',status:'active',emoji:'🕵️‍♀️'},
+    {id:5,badge:'GHPD-022',name:'Kofi Asante',rank:'Sergeant',division:'Patrol',status:'active',emoji:'👮‍♂️'},
+    {id:6,badge:'GHPD-031',name:'Yaa Darko',rank:'Officer',division:'Patrol',status:'active',emoji:'👮‍♀️'},
+    {id:7,badge:'GHPD-032',name:'Fiifi Agyeman',rank:'Officer',division:'Traffic',status:'active',emoji:'👮'},
+    {id:8,badge:'GHPD-033',name:'Nana Owusu',rank:'Officer',division:'K-9 Unit',status:'off-duty',emoji:'🐕'},
+    {id:9,badge:'GHPD-040',name:'Efua Appiah',rank:'Cadet',division:'Training',status:'active',emoji:'🎓'},
+    {id:10,badge:'GHPD-041',name:'Kojo Mensah',rank:'Cadet',division:'Training',status:'active',emoji:'🎓'},
+    {id:11,badge:'GHPD-025',name:'Abby Frimpong',rank:'Sergeant',division:'Investigations',status:'active',emoji:'🕵️'},
+    {id:12,badge:'GHPD-035',name:'Prince Osei',rank:'Officer',division:'SWAT',status:'active',emoji:'🪖'}
+  ]);
+  DB.set('documents', [
+    {id:1,title:'Standard Operating Procedures (SOP)',category:'Policy',type:'PDF',date:'2024-11-01',icon:'📋',url:'#'},
+    {id:2,title:'Officer Code of Conduct',category:'Policy',type:'PDF',date:'2024-11-01',icon:'⚖️',url:'#'},
+    {id:3,title:'Patrol Manual & Guidelines',category:'Manual',type:'PDF',date:'2024-10-15',icon:'🗺',url:'#'},
+    {id:4,title:'Use of Force Policy',category:'Policy',type:'PDF',date:'2024-10-15',icon:'🛡',url:'#'},
+    {id:5,title:'Training Academy Handbook',category:'Training',type:'PDF',date:'2024-09-20',icon:'🎓',url:'#'},
+    {id:6,title:'Arrest & Detention Procedures',category:'Procedures',type:'PDF',date:'2024-09-10',icon:'⛓',url:'#'}
+  ]);
+  DB.set('gallery', [
+    {id:1,caption:'Badge Ceremony',emoji:'🎖️'},{id:2,caption:'Downtown Patrol',emoji:'🚔'},
+    {id:3,caption:'K-9 Training',emoji:'🐕'},{id:4,caption:'Graduation',emoji:'🎓'},
+    {id:5,caption:'Community Day',emoji:'🤝'},{id:6,caption:'Tactical Exercise',emoji:'🪖'},
+    {id:7,caption:'Night Operations',emoji:'🌙'},{id:8,caption:'Awards Ceremony',emoji:'🏆'}
+  ]);
+  DB.set('videos', [
+    {id:1,title:'GHPD High Speed Chase — Downtown',ytId:'dQw4w9WgXcQ',category:'Operations',date:'2024-11-25'},
+    {id:2,title:'Cadet Graduation Ceremony',ytId:'dQw4w9WgXcQ',category:'Event',date:'2024-11-10'},
+    {id:3,title:'K-9 Unit Training Day',ytId:'dQw4w9WgXcQ',category:'Training',date:'2024-10-28'}
+  ]);
+  DB.set('divisions', [
+    {name:'Patrol Division',icon:'🚔',desc:'Primary law enforcement patrol'},
+    {name:'Investigations',icon:'🕵️',desc:'Criminal cases and detective work'},
+    {name:'Traffic Division',icon:'🚦',desc:'Traffic enforcement and accident response'},
+    {name:'SWAT / Tactical',icon:'🪖',desc:'High-risk armed response operations'},
+    {name:'K-9 Unit',icon:'🐕',desc:'Canine patrol and detection'},
+    {name:'Training Academy',icon:'🎓',desc:'Recruitment, training and certification'}
+  ]);
+  DB.set('applications', []);
+  DB.set('messages', []);
+  DB.set('adminUsers', [{username:'admin',displayName:'Administrator',role:'Super Admin',created:'2024-01-01'}]);
+  DB.set('activity', [
+    {icon:'📢',text:'Recruitment announcement published',time:'2h ago'},
+    {icon:'🎖',text:'Kofi Asante promoted to Sergeant',time:'1d ago'},
+    {icon:'👮',text:'Cadet Kojo Mensah added to roster',time:'2d ago'},
+    {icon:'📁',text:'SOP document uploaded',time:'3d ago'}
+  ]);
+  DB.set('init', true);
+}
+
+// ═══ NAVBAR ═══
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+function toggleNav() { document.getElementById('navLinks').classList.toggle('open'); }
+
+// ═══ ONLINE COUNT ═══
+function updateOnline() {
+  const n = Math.floor(Math.random() * 8) + 3;
+  const el = document.getElementById('onlineNum'); if (el) el.textContent = n;
+}
+setInterval(updateOnline, 30000);
+updateOnline();
+
+// ═══ PAGE ROUTING ═══
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
+  document.getElementById('navLinks').classList.remove('open');
+  window.scrollTo(0, 0);
+  renderPage(page);
+  return false;
+}
+function renderPage(p) {
+  const map = {home:()=>{renderHomeNews();renderStats();renderTicker()},roster:renderRoster,news:renderNewsPage,gallery:renderGallery,documents:renderDocs,videos:renderVideos,about:renderAbout,contact:loadContact};
+  if (map[p]) map[p]();
+}
+
+// ═══ TICKER ═══
+function renderTicker() {
+  const s = DB.get('settings',{});
+  const items = s.ticker||[];
+  const doubled = [...items,...items];
+  const tr = document.getElementById('tickerTrack');
+  if (tr) tr.innerHTML = doubled.map(t=>`<span class="ticker-item">${t}</span>`).join('');
+}
+
+// ═══ STATS ═══
+function renderStats() {
+  const s = DB.get('settings',{});
+  const st = s.stats||{};
+  const sl = s.statLabels||{};
+  const se=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  se('sOfficers',st.officers||'24'); se('sPatrols',st.patrols||'150+');
+  se('sCases',st.cases||'300+'); se('sAwards',st.awards||'48');
+  se('sOfficersLbl',sl.s1||'Officers on Roster'); se('sPatrolsLbl',sl.s2||'Patrols This Month');
+  se('sCasesLbl',sl.s3||'Cases Resolved'); se('sAwardsLbl',sl.s4||'Commendations');
+  se('rl-officers',st.officers||'24'); se('rl-cases',st.cases||'300+');
+  se('asf-officers',st.officers||'24'); se('asf-patrols',st.patrols||'150+'); se('asf-cases',st.cases||'300+');
+}
+
+// ═══ NEWS ═══
+function newsCardHTML(n) {
+  return `<div class="news-card">
+    <div class="nc-img"><div class="nc-scan"></div>${n.imgData?`<img src="${n.imgData}">`:(n.icon||'📰')}</div>
+    <div class="nc-body">
+      <div class="nc-meta"><span class="tag tag-gold">${n.category}</span><span class="nc-date">${fmtDate(n.date)}</span></div>
+      <div class="nc-title">${n.title}</div>
+      <div class="nc-excerpt">${n.excerpt}</div>
+      <div class="nc-footer">
+        <span class="nc-author">// ${n.author}</span>
+        <button class="nc-read" onclick="openNewsRead(${n.id})">READ ›</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderHomeNews() {
+  const g = document.getElementById('homeNewsGrid');
+  if (g) g.innerHTML = DB.get('news',[]).filter(n=>n.status==='published').slice(0,3).map(newsCardHTML).join('');
+}
+function renderNewsPage() {
+  const g = document.getElementById('newsGrid');
+  const news = DB.get('news',[]).filter(n=>n.status==='published');
+  if (g) g.innerHTML = news.length ? news.map(newsCardHTML).join('') : '<p style="color:var(--text-dim);font-family:Share Tech Mono,monospace;font-size:.75rem">// NO POSTS FOUND</p>';
+  const s = DB.get('settings',{});
+  const ab = document.getElementById('announcementBanner');
+  if (ab && s.announcement) ab.innerHTML = `<div class="announcement-banner"><div class="ann-pulse"></div><span>${s.announcement}</span></div>`;
+}
+function openNewsRead(id) {
+  const n = DB.get('news',[]).find(x=>x.id===id); if (!n) return;
+  document.getElementById('newsReadBody').innerHTML = `
+    <div class="nm-img">${n.imgData?`<img src="${n.imgData}">`:(n.icon||'📰')}</div>
+    <div class="nm-title">${n.title}</div>
+    <div class="nm-meta"><span class="tag tag-gold">${n.category}</span><span style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.68rem">${fmtDate(n.date)}</span><span style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.68rem">// ${n.author}</span></div>
+    <div class="nm-body">${n.body||n.excerpt}</div>
+  `;
+  document.getElementById('newsReadModal').classList.remove('hidden');
+}
+function closeNewsRead(e) { if (!e||e.target===document.getElementById('newsReadModal')) document.getElementById('newsReadModal').classList.add('hidden'); }
+
+// ═══ ROSTER ═══
+const RANK_CLASS = {Commissioner:'rp-commissioner','Deputy Chief':'rp-deputy',Captain:'rp-captain',Lieutenant:'rp-lieutenant',Sergeant:'rp-sergeant',Officer:'rp-officer',Cadet:'rp-cadet'};
+function renderRoster() {
+  const officers = DB.get('officers',[]);
+  const divs = ['ALL',...new Set(officers.map(o=>o.division))];
+  const rf = document.getElementById('rosterFilters');
+  if (rf) rf.innerHTML = divs.map((d,i)=>`<button class="f-btn${i===0?' active':''}" onclick="filterRoster('${d}',this)">${d}</button>`).join('');
+  renderRosterGrid('ALL');
+}
+function filterRoster(div, btn) {
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderRosterGrid(div);
+}
+function renderRosterGrid(div) {
+  const officers = DB.get('officers',[]).filter(o=>div==='ALL'||o.division===div);
+  const g = document.getElementById('rosterGrid');
+  if (!g) return;
+  g.innerHTML = officers.map(o=>`
+    <div class="officer-card">
+      <div class="oc-avatar">${o.imgData?`<img src="${o.imgData}">`:(o.emoji||'👮')}</div>
+      <div class="oc-badge">BADGE ${o.badge}</div>
+      <div class="oc-name">${o.name}</div>
+      <div class="oc-rank">${o.rank}</div>
+      <span class="rank-pip ${RANK_CLASS[o.rank]||'rp-officer'}">${o.rank}</span>
+      <div class="oc-status" style="margin-top:10px">
+        <span class="status-dot ${o.status==='active'?'s-active':o.status==='off-duty'?'s-offduty':'s-inactive'}"></span>
+        ${o.status==='active'?'ACTIVE':o.status==='off-duty'?'OFF DUTY':'INACTIVE'}
+      </div>
+      <div class="oc-div">${o.division}</div>
+    </div>
+  `).join('') || '<p style="color:var(--text-dim);grid-column:1/-1;font-family:Share Tech Mono,monospace;font-size:.75rem">// NO OFFICERS IN THIS DIVISION</p>';
+}
+
+// ═══ GALLERY ═══
+function renderGallery() {
+  const g = document.getElementById('galleryGrid');
+  const items = DB.get('gallery',[]);
+  if (g) g.innerHTML = items.map(i=>`
+    <div class="gal-item">
+      ${i.imgData?`<img src="${i.imgData}" alt="${i.caption}">`:(i.emoji||'📸')}
+      <div class="gal-overlay"><div class="gal-cap">${i.caption||''}</div></div>
+    </div>
+  `).join('') || '<p style="color:var(--text-dim)">// NO PHOTOS YET</p>';
+}
+
+// ═══ DOCUMENTS ═══
+function renderDocs() {
+  const g = document.getElementById('docsGrid');
+  const docs = DB.get('documents',[]);
+  if (g) g.innerHTML = docs.map(d=>`
+    <div class="doc-card">
+      <div class="doc-icon">${d.icon||'📄'}</div>
+      <div><div class="doc-title">${d.title}</div><div class="doc-meta">${d.category} · ${d.type} · ${fmtDate(d.date)}</div></div>
+      <button class="doc-dl" onclick="window.open('${d.url||'#'}')">⬇</button>
+    </div>
+  `).join('') || '<p style="color:var(--text-dim)">// NO DOCUMENTS</p>';
+}
+
+// ═══ VIDEOS ═══
+function renderVideos() {
+  const g = document.getElementById('videosGrid');
+  const videos = DB.get('videos',[]);
+  if (g) g.innerHTML = videos.map(v=>`
+    <div class="video-card">
+      <div class="video-thumb">
+        <div class="video-play-layer"><button class="video-play-btn" onclick="playVid('${v.ytId}',this)">▶</button></div>
+      </div>
+      <div class="vc-body">
+        <div class="vc-title">${v.title}</div>
+        <div class="vc-meta"><span class="tag tag-blue" style="margin-right:8px">${v.category}</span>${fmtDate(v.date)}</div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--text-dim)">// NO VIDEOS</p>';
+}
+function playVid(ytId, btn) {
+  const layer = btn.closest('.video-play-layer'); const thumb = btn.closest('.video-thumb');
+  layer.style.display = 'none';
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+  iframe.allow = 'autoplay; fullscreen';
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none';
+  thumb.appendChild(iframe);
+}
+
+// ═══ ABOUT ═══
+function renderAbout() {
+  const content = DB.get('aboutContent', null);
+  const el = document.getElementById('aboutContent');
+  if (el && content) el.innerHTML = content;
+  const divs = DB.get('divisions',[]);
+  const g = document.getElementById('divisionsGrid');
+  if (g) g.innerHTML = divs.map(d=>`<div class="doc-card" style="cursor:default"><div class="doc-icon">${d.icon||'🏛'}</div><div><div class="doc-title">${d.name}</div><div class="doc-meta">${d.desc}</div></div></div>`).join('');
+  const ranks=[{rank:'Commissioner',desc:'Highest rank',resp:'Overall command, policy decisions'},
+    {rank:'Deputy Chief',desc:'Second in command',resp:'Operational oversight, internal affairs'},
+    {rank:'Captain',desc:'Division commander',resp:'Division management, shift supervision'},
+    {rank:'Lieutenant',desc:'Senior supervisor',resp:'Unit leadership, report reviews'},
+    {rank:'Sergeant',desc:'Field supervisor',resp:'Patrol supervision, officer mentoring'},
+    {rank:'Officer',desc:'Sworn patrol officer',resp:'Active patrol, arrests, community'},
+    {rank:'Cadet',desc:'Officer in training',resp:'Academy training, supervised patrol'}
+  ];
+  const tbody = document.getElementById('rankTableBody');
+  if (tbody) tbody.innerHTML = ranks.map(r=>`<tr><td><span class="rank-pip ${RANK_CLASS[r.rank]||'rp-officer'}">${r.rank}</span></td><td style="color:var(--text)">${r.desc}</td><td>${r.resp}</td></tr>`).join('');
+}
+
+// ═══ CONTACT ═══
+function loadContact() {
+  const s = DB.get('settings',{});
+  const se=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  se('ctcDiscord',s.discord||'discord.gg/ghempire'); se('ctcFivem',s.fivem||'GH Empire RP');
+  se('ctcYoutube',s.youtube||'GH Empire Police'); se('ctcInsta',s.insta||'@ghempirepd');
+}
+function submitContact() {
+  const name=document.getElementById('ctcName').value.trim();
+  const msg=document.getElementById('ctcMsg').value.trim();
+  if (!name||!msg){toast('Fill required fields','error');return;}
+  const msgs=DB.get('messages',[]); msgs.push({id:Date.now(),name,discord:document.getElementById('ctcDiscordUser').value,subject:document.getElementById('ctcSubject').value,message:msg,date:todayStr()});
+  DB.set('messages',msgs); addActivity('📬',`Message from ${name}`);
+  toast('Message transmitted!','success');
+  ['ctcName','ctcDiscordUser','ctcSubject','ctcMsg'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+}
+
+// ═══ JOIN ═══
+function submitApp() {
+  const ign=document.getElementById('joinIGN').value.trim(); const discord=document.getElementById('joinDiscord').value.trim();
+  const reason=document.getElementById('joinReason').value.trim();
+  if(!ign||!discord||!reason){toast('Complete all required fields','error');return;}
+  const apps=DB.get('applications',[]); apps.push({id:Date.now(),ign,discord,experience:document.getElementById('joinExp').value,priorExp:document.getElementById('joinPrior').value,reason,contrib:document.getElementById('joinContrib').value,date:todayStr(),status:'pending'});
+  DB.set('applications',apps); addActivity('📋',`Application from ${ign}`);
+  document.getElementById('joinFormContainer').classList.add('hidden');
+  document.getElementById('joinSuccess').classList.remove('hidden');
+}
+function resetJoin() { ['joinIGN','joinDiscord','joinExp','joinPrior','joinReason','joinContrib'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); }
+
+// ═══════════════════════════════════════════════════════════
+// ADMIN SYSTEM
+// ═══════════════════════════════════════════════════════════
+function showAdminLogin() { document.getElementById('adminLoginOverlay').classList.remove('hidden'); }
+function doLogin() {
+  const u=document.getElementById('loginUser').value; const p=document.getElementById('loginPass').value;
+  if(u==='admin'&&p===DB.get('password','ghpd2024')){
+    document.getElementById('adminLoginOverlay').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    openAdminPane('dashboard'); loadAdminSettings();
+  } else {
+    document.getElementById('loginAlert').innerHTML='<div class="alert alert-error">// ACCESS DENIED — INVALID CREDENTIALS</div>';
+  }
+}
+function exitAdmin() { document.getElementById('adminPanel').classList.add('hidden'); }
+
+function openAdminPane(pane) {
+  document.querySelectorAll('.admin-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  const pel=document.getElementById('pane-'+pane); if(pel) pel.classList.add('active');
+  const bel=document.getElementById('sb-'+pane); if(bel) bel.classList.add('active');
+  renderAdminPane(pane);
+}
+
+function renderAdminPane(pane) {
+  const map={dashboard:renderDashboard,news:renderAdminNews,roster:renderAdminRoster,documents:renderAdminDocs,gallery:renderAdminGallery,videos:renderAdminVideos,about:renderAdminAbout,applications:renderApps,messages:renderMsgs,settings:renderSettings,users:renderUsers};
+  if(map[pane]) map[pane]();
+}
+
+// DASHBOARD
+function renderDashboard() {
+  const st=[
+    {icon:'👮',num:DB.get('officers',[]).length,label:'TOTAL OFFICERS'},
+    {icon:'🗞',num:DB.get('news',[]).length,label:'NEWS POSTS'},
+    {icon:'📋',num:DB.get('applications',[]).filter(a=>a.status==='pending').length,label:'PENDING APPS'},
+    {icon:'📬',num:DB.get('messages',[]).length,label:'MESSAGES'}
+  ];
+  document.getElementById('dashStats').innerHTML = st.map(s=>`<div class="astat"><div class="astat-icon">${s.icon}</div><div class="astat-num">${s.num}</div><div class="astat-lbl">${s.label}</div></div>`).join('');
+  const act=DB.get('activity',[]).slice(0,6);
+  document.getElementById('actList').innerHTML = act.map(a=>`<div class="act-item"><div class="act-icon">${a.icon}</div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('') || '<div style="padding:14px;color:var(--text-dim);font-size:.75rem;font-family:Share Tech Mono">// NO ACTIVITY</div>';
+  const apps=DB.get('applications',[]).filter(a=>a.status==='pending').slice(0,5);
+  document.getElementById('dashApps').innerHTML = apps.map(a=>`<div class="act-item"><div class="act-icon">📋</div><div class="act-text"><span style="color:var(--text)">${a.ign}</span> — ${a.discord}</div><div class="act-time">${a.date}</div></div>`).join('') || '<div style="padding:14px;color:var(--text-dim);font-size:.75rem;font-family:Share Tech Mono">// NO PENDING APPS</div>';
+}
+
+// NEWS ADMIN
+function renderAdminNews() {
+  document.getElementById('newsAdminBody').innerHTML = DB.get('news',[]).map(n=>`<tr>
+    <td style="color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.title}</td>
+    <td><span class="tag tag-gold">${n.category}</span></td><td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${n.author}</td><td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(n.date)}</td>
+    <td><span class="tag ${n.status==='published'?'tag-green':'tag-red'}">${n.status}</span></td>
+    <td><div class="actions"><button class="btn btn-xs" onclick="openNewsModal(${n.id})">EDIT</button><button class="btn btn-xs btn-danger" onclick="delNews(${n.id})">DEL</button></div></td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px;font-family:Share Tech Mono,monospace;font-size:.7rem">// NO POSTS</td></tr>';
+}
+function openNewsModal(id) {
+  const n=id?DB.get('news',[]).find(x=>x.id===id):null;
+  openMod('// '+(n?'EDIT':'NEW')+' NEWS POST',`
+    <div class="form-group"><label class="form-label">TITLE</label><input type="text" class="form-control" id="mNT" value="${n?.title||''}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">CATEGORY</label><select class="form-control" id="mNC">${['Announcement','Promotion','Operations','Event','Training','Notice'].map(c=>`<option${n?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">STATUS</label><select class="form-control" id="mNS"><option value="published"${n?.status==='published'?' selected':''}>PUBLISHED</option><option value="draft"${n?.status==='draft'?' selected':''}>DRAFT</option></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">AUTHOR</label><input type="text" class="form-control" id="mNA" value="${n?.author||'Administrator'}"></div>
+      <div class="form-group"><label class="form-label">DATE</label><input type="date" class="form-control" id="mND" value="${n?.date||todayStr()}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">ICON (EMOJI)</label><input type="text" class="form-control" id="mNI" value="${n?.icon||'📰'}" style="width:80px"></div>
+    <div class="form-group"><label class="form-label">EXCERPT</label><textarea class="form-control" id="mNE" rows="3">${n?.excerpt||''}</textarea></div>
+    <div class="form-group"><label class="form-label">FULL ARTICLE</label><textarea class="form-control" id="mNB" rows="7">${n?.body||''}</textarea></div>
+  `,[{label:'💾 SAVE',action:()=>saveNews(id),primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function saveNews(id) {
+  const title=document.getElementById('mNT').value.trim(); if(!title){toast('Title required','error');return;}
+  const news=DB.get('news',[]);
+  const obj={title,category:document.getElementById('mNC').value,status:document.getElementById('mNS').value,author:document.getElementById('mNA').value,date:document.getElementById('mND').value,icon:document.getElementById('mNI').value,excerpt:document.getElementById('mNE').value,body:document.getElementById('mNB').value};
+  if(id){const i=news.findIndex(n=>n.id===id);news[i]={...news[i],...obj};}else{news.unshift({id:Date.now(),...obj});addActivity('🗞',`Post: "${title}"`);}
+  DB.set('news',news); closeMod(); renderAdminNews(); toast('Post saved!','success');
+}
+function delNews(id) { if(!confirm('Delete?'))return; DB.set('news',DB.get('news',[]).filter(n=>n.id!==id)); renderAdminNews(); toast('Deleted','info'); }
+
+// ROSTER ADMIN
+function renderAdminRoster() {
+  document.getElementById('rosterAdminBody').innerHTML = DB.get('officers',[]).map(o=>`<tr>
+    <td style="color:var(--gold);font-family:Share Tech Mono,monospace;font-size:.65rem">${o.badge}</td>
+    <td style="color:var(--text)">${o.name}</td>
+    <td><span class="rank-pip ${RANK_CLASS[o.rank]||'rp-officer'}">${o.rank}</span></td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${o.division}</td>
+    <td><span class="status-dot ${o.status==='active'?'s-active':o.status==='off-duty'?'s-offduty':'s-inactive'}" style="display:inline-block;margin-right:5px"></span><span style="font-family:Share Tech Mono,monospace;font-size:.65rem">${o.status}</span></td>
+    <td><div class="actions"><button class="btn btn-xs" onclick="openOfficerModal(${o.id})">EDIT</button><button class="btn btn-xs btn-danger" onclick="delOfficer(${o.id})">REMOVE</button></div></td>
+  </tr>`).join('');
+}
+function openOfficerModal(id) {
+  const o=id?DB.get('officers',[]).find(x=>x.id===id):null;
+  const divs=DB.get('divisions',[]).map(d=>d.name);
+  openMod('// '+(o?'EDIT':'ADD')+' OFFICER',`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">BADGE #</label><input type="text" class="form-control" id="mOB" value="${o?.badge||'GHPD-'}"></div>
+      <div class="form-group"><label class="form-label">FULL NAME</label><input type="text" class="form-control" id="mON" value="${o?.name||''}"></div>
+      <div class="form-group"><label class="form-label">RANK</label><select class="form-control" id="mOR">${['Commissioner','Deputy Chief','Captain','Lieutenant','Sergeant','Officer','Cadet'].map(r=>`<option${o?.rank===r?' selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">DIVISION</label><select class="form-control" id="mOD">${[...divs,'Command'].map(d=>`<option${o?.division===d?' selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">STATUS</label><select class="form-control" id="mOS"><option value="active"${o?.status==='active'?' selected':''}>ACTIVE</option><option value="off-duty"${o?.status==='off-duty'?' selected':''}>OFF DUTY</option><option value="inactive"${o?.status==='inactive'?' selected':''}>INACTIVE</option></select></div>
+      <div class="form-group"><label class="form-label">AVATAR EMOJI</label><input type="text" class="form-control" id="mOE" value="${o?.emoji||'👮'}" style="width:80px"></div>
+    </div>
+  `,[{label:'💾 SAVE',action:()=>saveOfficer(id),primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function saveOfficer(id) {
+  const name=document.getElementById('mON').value.trim(); if(!name){toast('Name required','error');return;}
+  const officers=DB.get('officers',[]);
+  const obj={badge:document.getElementById('mOB').value,name,rank:document.getElementById('mOR').value,division:document.getElementById('mOD').value,status:document.getElementById('mOS').value,emoji:document.getElementById('mOE').value};
+  if(id){const i=officers.findIndex(o=>o.id===id);officers[i]={...officers[i],...obj};}else{officers.push({id:Date.now(),...obj});addActivity('👮',`Officer added: ${name}`);}
+  DB.set('officers',officers); closeMod(); renderAdminRoster(); toast('Officer saved!','success');
+}
+function delOfficer(id) { if(!confirm('Remove officer?'))return; DB.set('officers',DB.get('officers',[]).filter(o=>o.id!==id)); renderAdminRoster(); toast('Removed','info'); }
+
+// DOCS ADMIN
+function renderAdminDocs() {
+  document.getElementById('docsAdminBody').innerHTML = DB.get('documents',[]).map(d=>`<tr>
+    <td style="color:var(--text)">${d.icon} ${d.title}</td>
+    <td><span class="tag tag-blue">${d.category}</span></td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${d.type}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(d.date)}</td>
+    <td><div class="actions"><button class="btn btn-xs" onclick="openDocModal(${d.id})">EDIT</button><button class="btn btn-xs btn-danger" onclick="delDoc(${d.id})">DEL</button></div></td>
+  </tr>`).join('');
+}
+function openDocModal(id) {
+  const d=id?DB.get('documents',[]).find(x=>x.id===id):null;
+  openMod('// '+(d?'EDIT':'ADD')+' DOCUMENT',`
+    <div class="form-group"><label class="form-label">TITLE</label><input type="text" class="form-control" id="mDT" value="${d?.title||''}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">CATEGORY</label><select class="form-control" id="mDC">${['Policy','Manual','Procedures','Training','Forms','Reference'].map(c=>`<option${d?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">FILE TYPE</label><select class="form-control" id="mDFT">${['PDF','DOC','DOCX','XLS','XLSX','TXT','Link'].map(t=>`<option${d?.type===t?' selected':''}>${t}</option>`).join('')}</select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">ICON</label><input type="text" class="form-control" id="mDI" value="${d?.icon||'📄'}" style="width:80px"></div>
+      <div class="form-group"><label class="form-label">DATE</label><input type="date" class="form-control" id="mDD" value="${d?.date||todayStr()}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">FILE URL / LINK</label><input type="url" class="form-control" id="mDU" value="${d?.url||'#'}" placeholder="https://drive.google.com/..."></div>
+  `,[{label:'💾 SAVE',action:()=>saveDoc(id),primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function saveDoc(id) {
+  const title=document.getElementById('mDT').value.trim(); if(!title){toast('Title required','error');return;}
+  const docs=DB.get('documents',[]);
+  const obj={title,category:document.getElementById('mDC').value,type:document.getElementById('mDFT').value,icon:document.getElementById('mDI').value,date:document.getElementById('mDD').value,url:document.getElementById('mDU').value};
+  if(id){const i=docs.findIndex(d=>d.id===id);docs[i]={...docs[i],...obj};}else{docs.push({id:Date.now(),...obj});addActivity('📁',`Doc added: "${title}"`);}
+  DB.set('documents',docs); closeMod(); renderAdminDocs(); toast('Document saved!','success');
+}
+function delDoc(id) { if(!confirm('Delete?'))return; DB.set('documents',DB.get('documents',[]).filter(d=>d.id!==id)); renderAdminDocs(); toast('Deleted','info'); }
+
+// GALLERY ADMIN
+function renderAdminGallery() {
+  const items=DB.get('gallery',[]);
+  const g=document.getElementById('galAdminGrid');
+  if(g) g.innerHTML=items.map(i=>`<div class="media-thumb-a">${i.imgData?`<img src="${i.imgData}">`:(i.emoji||'📸')}<button class="media-del" onclick="delGal(${i.id})">✕</button></div>`).join('');
+}
+function handleGalUpload(input) {
+  const files=Array.from(input.files); const gal=DB.get('gallery',[]); let done=0;
+  files.forEach(f=>{
+    const r=new FileReader(); r.onload=e=>{gal.push({id:Date.now()+Math.random(),caption:f.name.replace(/\.[^/.]+$/,''),imgData:e.target.result});
+    done++;if(done===files.length){DB.set('gallery',gal);renderAdminGallery();toast(`${files.length} photo(s) uploaded!`,'success');addActivity('📸',`${files.length} photos uploaded`);}}; r.readAsDataURL(f);
+  }); input.value='';
+}
+function delGal(id) { DB.set('gallery',DB.get('gallery',[]).filter(g=>g.id!==id)); renderAdminGallery(); toast('Photo removed','info'); }
+
+// VIDEOS ADMIN
+function renderAdminVideos() {
+  document.getElementById('videosAdminBody').innerHTML = DB.get('videos',[]).map(v=>`<tr>
+    <td style="color:var(--text)">${v.title}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.62rem;color:var(--text-dim)">${v.ytId}</td>
+    <td><span class="tag tag-blue">${v.category}</span></td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(v.date)}</td>
+    <td><div class="actions"><button class="btn btn-xs" onclick="openVideoModal(${v.id})">EDIT</button><button class="btn btn-xs btn-danger" onclick="delVideo(${v.id})">DEL</button></div></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:20px;font-family:Share Tech Mono,monospace;font-size:.7rem">// NO VIDEOS</td></tr>';
+}
+function openVideoModal(id) {
+  const v=id?DB.get('videos',[]).find(x=>x.id===id):null;
+  openMod('// '+(v?'EDIT':'ADD')+' VIDEO',`
+    <div class="form-group"><label class="form-label">TITLE</label><input type="text" class="form-control" id="mVT" value="${v?.title||''}"></div>
+    <div class="form-group"><label class="form-label">YOUTUBE VIDEO ID</label><input type="text" class="form-control" id="mVY" value="${v?.ytId||''}" placeholder="e.g. dQw4w9WgXcQ"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group"><label class="form-label">CATEGORY</label><select class="form-control" id="mVC">${['Operations','Training','Event','Highlights','Community','Other'].map(c=>`<option${v?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">DATE</label><input type="date" class="form-control" id="mVD" value="${v?.date||todayStr()}"></div>
+    </div>
+  `,[{label:'💾 SAVE',action:()=>saveVideo(id),primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function saveVideo(id) {
+  const title=document.getElementById('mVT').value.trim(); const ytId=document.getElementById('mVY').value.trim();
+  if(!title||!ytId){toast('Title and YouTube ID required','error');return;}
+  const videos=DB.get('videos',[]);
+  const obj={title,ytId,category:document.getElementById('mVC').value,date:document.getElementById('mVD').value};
+  if(id){const i=videos.findIndex(v=>v.id===id);videos[i]={...videos[i],...obj};}else{videos.push({id:Date.now(),...obj});addActivity('🎬',`Video: "${title}"`);}
+  DB.set('videos',videos); closeMod(); renderAdminVideos(); toast('Video saved!','success');
+}
+function delVideo(id) { if(!confirm('Delete?'))return; DB.set('videos',DB.get('videos',[]).filter(v=>v.id!==id)); renderAdminVideos(); toast('Deleted','info'); }
+
+// ABOUT ADMIN
+function renderAdminAbout() {
+  const content=DB.get('aboutContent','<p>The GH Empire Police Department is the premier law enforcement agency...</p>');
+  const ed=document.getElementById('aboutEditor'); if(ed) ed.innerHTML=content;
+  const s=DB.get('settings',{}); const st=s.stats||{};
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||''};
+  sv('se-officers',st.officers); sv('se-patrols',st.patrols); sv('se-cases',st.cases); sv('se-awards',st.awards);
+  const divs=DB.get('divisions',[]);
+  const list=document.getElementById('divsAdminList');
+  if(list) list.innerHTML=divs.map((d,i)=>`<div style="display:flex;align-items:center;gap:10px;background:rgba(9,18,30,.9);padding:10px 14px;border:1px solid var(--border)"><span style="font-size:1.2rem">${d.icon}</span><div style="flex:1"><div style="color:var(--text);font-size:.85rem">${d.name}</div><div style="color:var(--text-dim);font-size:.72rem;font-family:Share Tech Mono,monospace">${d.desc}</div></div><button class="btn btn-xs btn-danger" onclick="delDiv(${i})">REMOVE</button></div>`).join('');
+}
+function saveAbout() { const c=document.getElementById('aboutEditor').innerHTML; DB.set('aboutContent',c); toast('About page saved!','success'); }
+function saveStats() {
+  const s=DB.get('settings',{}); s.stats=s.stats||{};
+  ['officers','patrols','cases','awards'].forEach(k=>{const e=document.getElementById(`se-${k}`);if(e)s.stats[k]=e.value;});
+  DB.set('settings',s); renderStats(); toast('Stats updated!','success');
+}
+function addDivision() {
+  openMod('// ADD DIVISION',`
+    <div class="form-group"><label class="form-label">NAME</label><input type="text" class="form-control" id="mDivN" placeholder="Division Name"></div>
+    <div class="form-group"><label class="form-label">ICON</label><input type="text" class="form-control" id="mDivI" value="🚔" style="width:80px"></div>
+    <div class="form-group"><label class="form-label">DESCRIPTION</label><textarea class="form-control" id="mDivD" rows="3"></textarea></div>
+  `,[{label:'ADD',action:()=>{const n=document.getElementById('mDivN').value.trim();if(!n)return;const d=DB.get('divisions',[]);d.push({name:n,icon:document.getElementById('mDivI').value,desc:document.getElementById('mDivD').value});DB.set('divisions',d);closeMod();renderAdminAbout();toast('Division added!','success');},primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function delDiv(idx) { const d=DB.get('divisions',[]);d.splice(idx,1);DB.set('divisions',d);renderAdminAbout();toast('Removed','info'); }
+function execCmd(cmd) { document.execCommand(cmd,false,null); }
+
+// APPLICATIONS
+function renderApps() {
+  document.getElementById('appsBody').innerHTML = DB.get('applications',[]).map(a=>`<tr>
+    <td style="color:var(--text)">${a.ign}</td><td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${a.discord}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${a.experience||'-'}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(a.date)}</td>
+    <td><span class="tag ${a.status==='pending'?'tag-gold':a.status==='approved'?'tag-green':'tag-red'}">${a.status}</span></td>
+    <td><div class="actions">
+      <button class="btn btn-xs" onclick="viewApp(${a.id})">VIEW</button>
+      <button class="btn btn-xs" style="border-color:var(--green-l);color:var(--green-l)" onclick="setAppStatus(${a.id},'approved')">✓</button>
+      <button class="btn btn-xs btn-danger" onclick="setAppStatus(${a.id},'rejected')">✕</button>
+    </div></td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px;font-family:Share Tech Mono,monospace;font-size:.7rem">// NO APPLICATIONS</td></tr>';
+}
+function viewApp(id) {
+  const a=DB.get('applications',[]).find(x=>x.id===id); if(!a) return;
+  openMod('// APPLICATION — '+a.ign,`<div style="display:flex;flex-direction:column;gap:12px;font-family:Share Tech Mono,monospace;font-size:.75rem">
+    <div><span style="color:var(--gold)">IGN:</span> <span style="color:var(--text)">${a.ign}</span></div>
+    <div><span style="color:var(--gold)">DISCORD:</span> ${a.discord}</div>
+    <div><span style="color:var(--gold)">FIVEM EXP:</span> ${a.experience||'—'}</div>
+    <div><span style="color:var(--gold)">PRIOR RP:</span> ${a.priorExp||'—'}</div>
+    <div><span style="color:var(--gold)">WHY GHPD:</span><div style="margin-top:6px;padding:10px;background:rgba(9,18,30,.9);color:var(--text-dim);line-height:1.7">${a.reason}</div></div>
+    <div><span style="color:var(--gold)">CONTRIBUTION:</span><div style="margin-top:6px;padding:10px;background:rgba(9,18,30,.9);color:var(--text-dim);line-height:1.7">${a.contrib||'—'}</div></div>
+    <div><span style="color:var(--gold)">STATUS:</span> <span class="tag ${a.status==='pending'?'tag-gold':a.status==='approved'?'tag-green':'tag-red'}">${a.status}</span></div>
+  </div>`,
+  [{label:'✓ APPROVE',action:()=>{setAppStatus(id,'approved');closeMod();},primary:true},{label:'✕ REJECT',action:()=>{setAppStatus(id,'rejected');closeMod();}},{label:'CLOSE',action:closeMod}]);
+}
+function setAppStatus(id,status) {
+  const a=DB.get('applications',[]); const i=a.findIndex(x=>x.id===id); if(i>-1)a[i].status=status;
+  DB.set('applications',a); renderApps(); addActivity(status==='approved'?'✅':'❌',`Application ${status}`); toast('Application '+status,status==='approved'?'success':'info');
+}
+
+// MESSAGES
+function renderMsgs() {
+  document.getElementById('msgsBody').innerHTML = DB.get('messages',[]).map(m=>`<tr>
+    <td style="color:var(--text)">${m.name}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${m.discord||'—'}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${m.subject||'—'}</td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(m.date)}</td>
+    <td><div class="actions"><button class="btn btn-xs" onclick="viewMsg(${m.id})">VIEW</button><button class="btn btn-xs btn-danger" onclick="delMsg(${m.id})">DEL</button></div></td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:20px;font-family:Share Tech Mono,monospace;font-size:.7rem">// NO MESSAGES</td></tr>';
+}
+function viewMsg(id) {
+  const m=DB.get('messages',[]).find(x=>x.id===id); if(!m) return;
+  document.getElementById('msgModalBody').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;font-family:Share Tech Mono,monospace;font-size:.75rem">
+    <div><span style="color:var(--gold)">FROM:</span> <span style="color:var(--text)">${m.name}</span></div>
+    <div><span style="color:var(--gold)">DISCORD:</span> ${m.discord||'—'}</div>
+    <div><span style="color:var(--gold)">SUBJECT:</span> ${m.subject||'—'}</div>
+    <div><span style="color:var(--gold)">MESSAGE:</span><div style="margin-top:8px;padding:12px;background:rgba(9,18,30,.9);color:var(--text-dim);line-height:1.7">${m.message}</div></div>
+  </div>`;
+  document.getElementById('msgModal').classList.remove('hidden');
+}
+function delMsg(id) { if(!confirm('Delete?'))return; DB.set('messages',DB.get('messages',[]).filter(m=>m.id!==id)); renderMsgs(); toast('Deleted','info'); }
+
+// SETTINGS
+function loadAdminSettings() { renderSettings(); }
+function renderSettings() {
+  const s=DB.get('settings',{}); const st=s.stats||{}; const sl=s.statLabels||{};
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||''};
+  sv('ss-deptName',s.deptName); sv('ss-shortName',s.shortName); sv('ss-serverName',s.serverName); sv('ss-motto',s.motto);
+  sv('ss-discord',s.discord); sv('ss-fivem',s.fivem); sv('ss-youtube',s.youtube); sv('ss-insta',s.insta);
+  sv('ss-s1num',st.officers); sv('ss-s1lbl',sl.s1||'Officers on Roster');
+  sv('ss-s2num',st.patrols); sv('ss-s2lbl',sl.s2||'Patrols This Month');
+  sv('ss-s3num',st.cases); sv('ss-s3lbl',sl.s3||'Cases Resolved');
+  sv('ss-s4num',st.awards); sv('ss-s4lbl',sl.s4||'Commendations');
+  sv('ss-ticker',(s.ticker||[]).join('\n')); sv('ss-announcement',s.announcement);
+  const logo=DB.get('logoData',null);
+  if(logo){const lp=document.getElementById('logoPreview');if(lp)lp.src=logo;}
+}
+function saveSettings() {
+  const gv=id=>document.getElementById(id)?.value?.trim()||'';
+  const s=DB.get('settings',{});
+  s.deptName=gv('ss-deptName'); s.shortName=gv('ss-shortName'); s.serverName=gv('ss-serverName'); s.motto=gv('ss-motto');
+  s.discord=gv('ss-discord'); s.fivem=gv('ss-fivem'); s.youtube=gv('ss-youtube'); s.insta=gv('ss-insta');
+  s.stats=s.stats||{};
+  s.stats.officers=gv('ss-s1num'); s.stats.patrols=gv('ss-s2num'); s.stats.cases=gv('ss-s3num'); s.stats.awards=gv('ss-s4num');
+  s.statLabels={s1:gv('ss-s1lbl'),s2:gv('ss-s2lbl'),s3:gv('ss-s3lbl'),s4:gv('ss-s4lbl')};
+  s.ticker=gv('ss-ticker').split('\n').filter(t=>t.trim());
+  s.announcement=gv('ss-announcement');
+  DB.set('settings',s);
+  const bm=document.getElementById('brandMain'); if(bm) bm.textContent=s.shortName||'GH EMPIRE PD';
+  const bs=document.getElementById('brandSub'); if(bs) bs.textContent=s.serverName?s.serverName+' · Roleplay':'FiveM Roleplay Division';
+  addActivity('⚙','Settings updated'); toast('Settings saved!','success');
+}
+function handleLogoUpload(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result; DB.set('logoData',data);
+    document.getElementById('logoPreview').src=data;
+    // Update all logo spots
+    ['navLogo','loginLogoImg'].forEach(id=>{const el=document.getElementById(id);if(el){el.src=data;el.style.display='block';}});
+    ['navBrandEmoji','loginEmoji','heroLogoEmoji','atbLogoEmoji','footerLogoEmoji','aboutCenterLogo','aboutPageCenter'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    const hli=document.getElementById('heroLogoImg'); if(hli){hli.src=data;hli.style.display='block';}
+    toast('Logo updated!','success');
+  };
+  reader.readAsDataURL(file); input.value='';
+}
+function changePass() {
+  const np=document.getElementById('ss-newpass').value; const cp=document.getElementById('ss-confpass').value;
+  if(!np){toast('Enter new password','error');return;} if(np!==cp){toast('Passwords do not match','error');return;}
+  if(np.length<4){toast('Too short','error');return;} DB.set('password',np);
+  document.getElementById('ss-newpass').value=''; document.getElementById('ss-confpass').value='';
+  toast('Password updated!','success');
+}
+
+// USERS
+function renderUsers() {
+  document.getElementById('usersBody').innerHTML = DB.get('adminUsers',[]).map(u=>`<tr>
+    <td style="color:var(--text)">${u.username}</td><td>${u.displayName}</td>
+    <td><span class="tag tag-gold">${u.role}</span></td>
+    <td style="font-family:Share Tech Mono,monospace;font-size:.65rem">${fmtDate(u.created)}</td>
+    <td><button class="btn btn-xs btn-danger" onclick="delUser('${u.username}')">REMOVE</button></td>
+  </tr>`).join('');
+}
+function openUserModal() {
+  openMod('// ADD ADMIN USER',`
+    <div class="form-group"><label class="form-label">USERNAME</label><input type="text" class="form-control" id="mUU"></div>
+    <div class="form-group"><label class="form-label">DISPLAY NAME</label><input type="text" class="form-control" id="mUN"></div>
+    <div class="form-group"><label class="form-label">ROLE</label><select class="form-control" id="mUR"><option>Admin</option><option>Moderator</option><option>Content Manager</option><option>Super Admin</option></select></div>
+  `,[{label:'ADD',action:()=>{const u=document.getElementById('mUU').value.trim();if(!u)return;const users=DB.get('adminUsers',[]);users.push({username:u,displayName:document.getElementById('mUN').value,role:document.getElementById('mUR').value,created:todayStr()});DB.set('adminUsers',users);closeMod();renderUsers();toast('User added!','success');},primary:true},{label:'CANCEL',action:closeMod}]);
+}
+function delUser(username) {
+  if(username==='admin'){toast('Cannot remove main admin','error');return;} if(!confirm('Remove?'))return;
+  DB.set('adminUsers',DB.get('adminUsers',[]).filter(u=>u.username!==username)); renderUsers(); toast('Removed','info');
+}
+
+// ═══ MODAL ═══
+function openMod(title, body, actions=[]) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalFooter').innerHTML = actions.map(a=>`<button class="btn${a.primary?' btn-primary':''} btn-sm" onclick="(${a.action})()">${a.label}</button>`).join('');
+  document.getElementById('modalBox').className = 'modal-box';
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function closeMod(e) { if(!e||e.target===document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.add('hidden'); }
+
+// ═══ TOAST ═══
+function toast(msg,type='info') {
+  const icons={success:'✅',error:'❌',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className=`toast toast-${type}`;
+  el.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-text">${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// ═══ ACTIVITY ═══
+function addActivity(icon,text) {
+  const a=DB.get('activity',[]); a.unshift({icon,text,time:'Just now'}); if(a.length>20)a.pop(); DB.set('activity',a);
+}
+
+// ═══ UTILITIES ═══
+function fmtDate(d) { if(!d)return''; try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch{return d;} }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function triggerUpload(id) { document.getElementById(id).click(); }
+
+// ═══ LOAD SAVED LOGO ═══
+function loadSavedLogo() {
+  const logo = DB.get('logoData', null);
+  if (!logo) return;
+  ['navLogo','loginLogoImg'].forEach(id=>{const el=document.getElementById(id);if(el){el.src=logo;el.style.display='block';}});
+  ['navBrandEmoji','loginEmoji','heroLogoEmoji','atbLogoEmoji','footerLogoEmoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const hli=document.getElementById('heroLogoImg'); if(hli){hli.src=logo;hli.style.display='block';}
+  const lp=document.getElementById('logoPreview'); if(lp)lp.src=logo;
+}
+
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded',()=>{
+  initData(); showPage('home'); loadSavedLogo();
+  updateOnline();
+  // Keyboard shortcut
+  document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A')showAdminLogin();});
+});
+</script>
+</body>
+</html>
